@@ -1,0 +1,832 @@
+---
+# Source: handson/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: handson-secrets
+type: Opaque
+data:
+  DB_PASSWORD: ZWM5NzVhNjcyOGZhN2RlOGJkYTEwODYy
+  IDP_SIGNING_KEY: TFMwdExTMUNSVWRKVGlCU1UwRWdVRkpKVmtGVVJTQkxSVmt0TFMwdExRcE5TVWxGY0ZGSlFrRkJTME5CVVVWQmRWbHBVMWx0UkdkSVVYVklORzlKY1dWTk5XNTFPV2RLUlcxWGNuWmpjamRSU1RKNmEwSXZOVE54UlZKb04xVkVDbTFDYTJrd1UzQnRLM1Z3YW10UmFta3pZbE5xUVdwbVJIcHZOVEV4YjFKc2NVZFZWRGxUVEZWclFtTXpVRE5pY0dsVWRDOTRXRkV5VVRReVVIWmphbFVLYkhkQ1VqSkZkQzlvYTFKS05VaFJWMHBsYTBsbWFFdHNWamwxVldabGJuWkdNbXhUU0d4blZFMTRPWEJKVFM5WVRtWmtkbVJpYWtGTk1qZEhUVzFyS3dwcFlpdHhTbkJ0Wm1kWmFXNDJUM1VyUWtKa1ZHUllUbEJyYlhScFNrMUxlR1poWmxWRlNUTjNZalptSzFCSVFVODNUSE13V1RFNVJFMVFWR1ZRWkV0WUNuRTNlRGx4Tm1VcmFGSjBlWEJCUzJoT09Wb3JkSEZvUzBWeldtRktWVGxNYVdwVlVuaHZWRTU2Tm1OM1puWldlV2R4V1hWNFFuWjRhRVZNWXpSc09IVUtaVXREWVM5SWFrZDBjamR2VlVWdUwyTlZhRFpFY2k4clV5ODVObTV0WVVwTGJraGFMM2RKUkVGUlFVSkJiMGxDUVZGRGNYUklSRlJYV1ZRMk1VZEJjZ3BXVlRWVmNISjViRUpoYldKS2NtRXdkM0V3V1VGUmFrVjNPV0kwVFhOU1dsVTBRa05GYldGS1ozWlZURk5zZEdZeE5HYzVTM1pYVFd4a2FIZEdXREYzQ21GYVRFeE9SM292WTBKUFdtMHZTekpVZFdWcE16TTJOVWw1Y2tkVWRIRkNZVTlZU2twWU9HOW1jR0ZRTmtGalFYcHdjVTlQVUVsaFdsaGxRamxqVDFRS1kyOXJUWGhzWmt4SFdXaFpNR28yT0RsT05YcG9aakJyYlVZNGJrMWxTM0ZZYjJGR05XdElORGhCVWpOSlFuYzJhM0k0VFZKQllXOWxlbVJ6ZVZCb2JncExjaXN5VkRNMGVXaEdiRlJUY1dGcVdpdE1SMG8wWjBSNU5pOXdTMFZhTm1SdE9WRTBjekJsWjFGNGNHaE5ZMGx4S3pCeVdWaHRiVmw2TTJZNGRtZG5DbEZMV1hOcGVrZGlRVzVXU2xkdGMzSnlUbmxyWmtoSllYUXdVakJQUm1VclF6RnVVV2RPTUdaV1lTOUhhRWRDVG1sRGNsUnNRMHB1V0ZsVVpIRkhlbU1LWVZOMU4yRjJkMHBCYjBkQ1FWQklhUzl2T0RrNVlta3JWbFJEV1dZMWFrVlJXbmRLY1d4U1ZuUXpXbFJDVDFBMFZIZE5jVmd3UjBVM1ExaDVNVTlRVndwMkswTkxXV1oyVTFONmMxaHJPVVpWWnpsVWRVNUthbHBFYmxWUlRHNVNTRUpxTlUwMWFrMW1jVGRsUjFacWJWUmtjRTVvTXpsblNDODBSMWxvUjJockNrd3dNRVJJYVc5eFNIbDBNbEpoWTJoU05uRjJMMVZvVTJVclRucFdlR2hYVFZJM2VVVmpObEJCWTJ0ck1ubE5ZV2t5WVZoTlpWTmtRVzlIUWtGTlVtSUtNVGRDVFRaU2QyUjRXSEJvYWs1M1NXRnJSMnBFY0RaRkwwVm9OalJsTUZCM1IyZEZLMWRSTjB0NlV5OHZNR051VGtjMmNscFVNVUp6VmxwdVlURlhid3A0Y205a2VXVXlkM053Y0hZck4wZEhjbFV3T1VwV05VZFlWMWxSVG1aaGFYbEhhMW8wVXk5SmFrWTJWMHBMVTNCd1RUUmtiVWhSSzNWR1owUlpWMUV3Q2k5V2FWaE1aREIwVnpSTVpWQnBlRmgwTldkRWMwMTJZMUYyUVhsVmMyOTFlRGRRYm5KWFFreEJiMGRDUVU1T1NrMXZObmN3Y0dwRVQwOXhkalp3Vkc4S2NWWTNRbGR3VlRoSmJuTnhNMVpUT0hFeFptRm9WVnBZT0RKaVlXcElaRkZQUmpkTmQyWlpWSEJVT1VOM2R6TlJkM2s0Vm5VM0wyWnhZVGczY1ZSb1RRcGhabTB4Wkd0amJETlFjamhVZDJ0UU9VUXlZeXR6YUdKb1ExbFNjMWRpTWxSQ1REZE1SR2R6Wm5adFdqUkNSM3BGYTFSWldWZG1lRVpQUzBNNU5ISTRDbXAyS3pJNWVrd3dNamw0TVZsNU1YZHVSaTlMY0daNFNrRnZSMEZLZEVOek5qRnVXWFp6YTFoNk1rSllUWFYxY1RkWWVYQkhRMkppY0VGM0syVjBhMmdLVWtzMmRrTmxVVEJZTUVsUk1sZFVhbXhZYW0xRk1YcFpSRWRrTTB4VlEyMTNRVmhDWXlzek5EaEdVbmR2WVVGdmR6bHllR1I0YUdKM1EwRXlUM0ZJYkFwRlptMWxjbEUxYzNsUmJsQkNiMjVQV0ZSM01tUmpkM05NY1VoRllqaFhWbmw0ZUdaWldtaHJkbHBNYmtsWFlscHJVVUY0ZHpaeGRuaE5SamswYUN0eUNrNUhTRFIzVFRoRFoxbEZRVzVpSzJSSFZXaGljRFZ3UlZjM1lXTTRObFpzUW14aFZGY3JhbWhLV25KRFkyMVdWMGgyWlVaVE9YVjFibEpvVEhKMFYwTUtWeTlYV1dGblJWTmpZbUV5TjJoMGVqQTRXVzk1VkhRd1dIRndhRVp2TWpOUFpVRklVUzlZY0hrNFJUbHFZV3RRY1VKd1RHWjNSRmRCV25FemRUVkdRUXB5TWtaa05XOVZUR3hwY2tkdFJreEljVW94UVZock0ybEZVRWgzUW5aMVNuSXJjbXQxZGt4U2JVUnVURkJqVUhwUk0xZHNSbmRCUFFvdExTMHRMVVZPUkNCU1UwRWdVRkpKVmtGVVJTQkxSVmt0TFMwdExRbz0=
+  IDP_DEMO_PASSWORD: ZGVtby1wYXNzd29yZA==
+---
+# Source: handson/templates/entry.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-legacy
+  labels:
+    app: handson-legacy
+    app.kubernetes.io/part-of: handson
+spec:
+  selector:
+    app: handson-legacy
+  ports:
+    - name: http
+      port: 8080
+    - name: metrics
+      port: 9464
+---
+# Source: handson/templates/entry.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-modern
+  labels:
+    app: handson-modern
+    app.kubernetes.io/part-of: handson
+spec:
+  selector:
+    app: handson-modern
+  ports:
+    - name: http
+      port: 8080
+    - name: metrics
+      port: 9464
+---
+# Source: handson/templates/postgres.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-postgres
+  labels:
+    app: handson-postgres
+spec:
+  selector:
+    app: handson-postgres
+  ports:
+    - name: postgres
+      port: 5432
+---
+# Source: handson/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-column
+  labels:
+    app: handson-column
+    app.kubernetes.io/part-of: handson
+spec:
+  selector:
+    app: handson-column
+  ports:
+    - name: grpc
+      port: 50051
+    - name: metrics
+      port: 9464
+---
+# Source: handson/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-idp
+  labels:
+    app: handson-idp
+    app.kubernetes.io/part-of: handson
+spec:
+  selector:
+    app: handson-idp
+  ports:
+    - name: grpc
+      port: 50051
+    - name: http
+      port: 8080
+    - name: metrics
+      port: 9464
+---
+# Source: handson/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-project
+  labels:
+    app: handson-project
+    app.kubernetes.io/part-of: handson
+spec:
+  selector:
+    app: handson-project
+  ports:
+    - name: grpc
+      port: 50051
+    - name: metrics
+      port: 9464
+---
+# Source: handson/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: handson-task
+  labels:
+    app: handson-task
+    app.kubernetes.io/part-of: handson
+spec:
+  selector:
+    app: handson-task
+  ports:
+    - name: grpc
+      port: 50051
+    - name: metrics
+      port: 9464
+---
+# Source: handson/templates/entry.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handson-legacy
+  labels:
+    app: handson-legacy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-legacy
+  template:
+    metadata:
+      labels:
+        app: handson-legacy
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: entry
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/handson:legacy
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9464
+          env:
+            - name: PROJECT_ADDR
+              value: handson-project:50051
+            - name: TASK_ADDR
+              value: handson-task:50051
+            - name: COLUMN_ADDR
+              value: handson-column:50051
+            - name: IDP_ADDR
+              value: handson-idp:50051
+            - name: IDP_JWKS_URL
+              value: http://handson-idp:8080/.well-known/jwks.json
+            - name: IDP_ISS
+              value: "http://handson-idp:8080"
+            - name: IDP_AUD
+              value: "handson"
+            - name: OTEL_SERVICE_NAME
+              value: handson-legacy
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson,app.variant=legacy,app.color=blue
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+# Source: handson/templates/entry.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handson-modern
+  labels:
+    app: handson-modern
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-modern
+  template:
+    metadata:
+      labels:
+        app: handson-modern
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: entry
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/handson:modern
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9464
+          env:
+            - name: PROJECT_ADDR
+              value: handson-project:50051
+            - name: TASK_ADDR
+              value: handson-task:50051
+            - name: COLUMN_ADDR
+              value: handson-column:50051
+            - name: IDP_ADDR
+              value: handson-idp:50051
+            - name: IDP_JWKS_URL
+              value: http://handson-idp:8080/.well-known/jwks.json
+            - name: IDP_ISS
+              value: "http://handson-idp:8080"
+            - name: IDP_AUD
+              value: "handson"
+            - name: OTEL_SERVICE_NAME
+              value: handson-modern
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson,app.variant=modern,app.color=green
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+# Source: handson/templates/services.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handson-column
+  labels:
+    app: handson-column
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-column
+  template:
+    metadata:
+      labels:
+        app: handson-column
+    spec:
+      terminationGracePeriodSeconds: 15
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/column:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python","./cmd/server/main.py"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: PROJECT_ADDR
+              value: "handson-project:50051"
+            - name: OTEL_SERVICE_NAME
+              value: handson-column
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["migrate"]
+      containers:
+        - name: server
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/column:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python","./cmd/server/main.py"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: PROJECT_ADDR
+              value: "handson-project:50051"
+            - name: OTEL_SERVICE_NAME
+              value: handson-column
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["server"]
+          ports:
+            - name: grpc
+              containerPort: 50051
+            - name: metrics
+              containerPort: 9464
+          readinessProbe:
+            grpc:
+              port: 50051
+            periodSeconds: 3
+          livenessProbe:
+            grpc:
+              port: 50051
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+# Source: handson/templates/services.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handson-idp
+  labels:
+    app: handson-idp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-idp
+  template:
+    metadata:
+      labels:
+        app: handson-idp
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/idp:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/idp-service"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: IDP_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: IDP_SIGNING_KEY
+            - name: IDP_ISS
+              value: "http://handson-idp:8080"
+            - name: IDP_AUD
+              value: "handson"
+            - name: IDP_DEMO_EMAIL
+              value: "demo@example.com"
+            - name: IDP_DEMO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: IDP_DEMO_PASSWORD
+            - name: OTEL_SERVICE_NAME
+              value: handson-idp
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["migrate"]
+      containers:
+        - name: server
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/idp:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/idp-service"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: IDP_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: IDP_SIGNING_KEY
+            - name: IDP_ISS
+              value: "http://handson-idp:8080"
+            - name: IDP_AUD
+              value: "handson"
+            - name: IDP_DEMO_EMAIL
+              value: "demo@example.com"
+            - name: IDP_DEMO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: IDP_DEMO_PASSWORD
+            - name: OTEL_SERVICE_NAME
+              value: handson-idp
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["server"]
+          ports:
+            - name: grpc
+              containerPort: 50051
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9464
+          readinessProbe:
+            grpc:
+              port: 50051
+            periodSeconds: 3
+          livenessProbe:
+            grpc:
+              port: 50051
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+# Source: handson/templates/services.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handson-project
+  labels:
+    app: handson-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-project
+  template:
+    metadata:
+      labels:
+        app: handson-project
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/project:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/project-service"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: COLUMN_ADDR
+              value: "handson-column:50051"
+            - name: TASK_ADDR
+              value: "handson-task:50051"
+            - name: OTEL_SERVICE_NAME
+              value: handson-project
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["migrate"]
+      containers:
+        - name: server
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/project:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/project-service"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: COLUMN_ADDR
+              value: "handson-column:50051"
+            - name: TASK_ADDR
+              value: "handson-task:50051"
+            - name: OTEL_SERVICE_NAME
+              value: handson-project
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["server"]
+          ports:
+            - name: grpc
+              containerPort: 50051
+            - name: metrics
+              containerPort: 9464
+          readinessProbe:
+            grpc:
+              port: 50051
+            periodSeconds: 3
+          livenessProbe:
+            grpc:
+              port: 50051
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+# Source: handson/templates/services.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: handson-task
+  labels:
+    app: handson-task
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-task
+  template:
+    metadata:
+      labels:
+        app: handson-task
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/task:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/task-service"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: PROJECT_ADDR
+              value: "handson-project:50051"
+            - name: OTEL_SERVICE_NAME
+              value: handson-task
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["migrate"]
+      containers:
+        - name: server
+          image: ghcr.io/cloudnativedaysjp/cnd-handson-app/task:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/task-service"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: DB_HOST
+              value: "handson-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DB
+              value: "handson"
+            - name: DB_USER
+              value: "handson"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            - name: PROJECT_ADDR
+              value: "handson-project:50051"
+            - name: OTEL_SERVICE_NAME
+              value: handson-task
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=handson
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+          args: ["server"]
+          ports:
+            - name: grpc
+              containerPort: 50051
+            - name: metrics
+              containerPort: 9464
+          readinessProbe:
+            grpc:
+              port: 50051
+            periodSeconds: 3
+          livenessProbe:
+            grpc:
+              port: 50051
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+---
+# Source: handson/templates/postgres.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: handson-postgres
+  labels:
+    app: handson-postgres
+spec:
+  serviceName: handson-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: handson-postgres
+  template:
+    metadata:
+      labels:
+        app: handson-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: "handson"
+            - name: POSTGRES_USER
+              value: "handson"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: handson-secrets
+                  key: DB_PASSWORD
+            # ボリュームの直下には lost+found があり、initdb が空でないと判断して失敗する
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+# Source: handson/templates/gateway.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: handson-entry
+spec:
+  parentRefs:
+    - name: showcase
+      namespace: gateway
+  hostnames:
+    - cnd-handson.showcase.cloudnativedays.jp
+  rules:
+    - backendRefs:
+        - name: handson-legacy
+          port: 8080
+          weight: 100
+        - name: handson-modern
+          port: 8080
+          weight: 0
