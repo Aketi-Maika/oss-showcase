@@ -20,14 +20,19 @@ YAML は `apps/<OSS の名前>/` の直下に置いてください。サブデ�
 
 - 外から届くのは、HTTPRoute で公開した HTTP だけです。Ingress、LoadBalancer、NodePort は使えません
 - HTTP 以外のポートの Service も作れますが、届くのは同じ namespace の中だけです
-- 別のアプリの namespace からの通信は届きません
+- 別のアプリの namespace からの通信は届きません。別のアプリには、`https://<名前>.showcase.cloudnativedays.jp` の URL で繋いでください
 - 外への通信は、DNS、80 番、443 番と、Kubernetes の API サーバだけが通ります
+- 10.0.0.0/8、172.16.0.0/12、192.168.0.0/16 などのプライベートアドレスには届きません
 - Service の `externalIPs` と `type: ExternalName`、手で書いた Endpoints と EndpointSlice は使えません
 
 ### Pod
 
 - Pod Security の baseline に従います。特権コンテナ、hostPath、hostNetwork、hostPort、`NET_ADMIN` などの capabilities の追加は使えません
 - コンテナは root で動かして構いません
+- イメージは、Docker Hub、ghcr.io、quay.io、registry.k8s.io、gcr.io、mirror.gcr.io、public.ecr.aws、mcr.microsoft.com、registry.gitlab.com から pull できます。ほかのレジストリを使いたいときは、PR で相談してください
+- volume は、configMap、secret、emptyDir、projected、downwardAPI、persistentVolumeClaim、ephemeral、image だけ使えます。nfs や iscsi は使えません
+- `/proc` と `/sys` の下には volume をマウントできません
+- ServiceAccount のトークンは、既定ではマウントされません。API サーバを使うアプリは、自分の ServiceAccount を作るか、Pod に `automountServiceAccountToken: true` を書いてください
 - 書かれていなければ、`seccompProfile: RuntimeDefault` と `allowPrivilegeEscalation: false` が付きます。sudo のように実行中に権限を上げる処理は動きません
 - user namespace を作ろうとしたプロセスは止められます。Chromium のサンドボックスのように user namespace を使う OSS は動きません
 - `priorityClassName` は書けません
@@ -65,6 +70,8 @@ limits を超えてメモリを使うとコンテナが止まり、emptyDir と�
 | emptyDir とログの limits | 5Gi |
 | Pod | 10 個 |
 | PersistentVolumeClaim | 2 個、合計 2Gi |
+| ConfigMap / Secret | 30 個 / 30 個 |
+| Job / CronJob | 30 個 / 10 個 |
 
 ## Helm チャートを使うとき
 

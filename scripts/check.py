@@ -30,6 +30,11 @@ APP_KINDS = {
     ("rbac.authorization.k8s.io", "Role"), ("rbac.authorization.k8s.io", "RoleBinding"),
     ("gateway.networking.k8s.io", "HTTPRoute"), ("postgresql.cnpg.io", "Cluster"),
 }
+# oss-showcase-platform の policies/image.yaml と揃える。pull はノードのネットワークから出ていく
+REGISTRIES = {"docker.io", "index.docker.io", "ghcr.io", "quay.io", "registry.k8s.io", "gcr.io",
+              "mirror.gcr.io", "public.ecr.aws", "mcr.microsoft.com", "registry.gitlab.com"}
+# oss-showcase-platform の policies/volume.yaml と揃える
+VOLUMES = {"configMap", "secret", "emptyDir", "projected", "downwardAPI", "persistentVolumeClaim", "ephemeral", "image"}
 
 
 def keys(obj, key):
@@ -42,6 +47,11 @@ def keys(obj, key):
     elif isinstance(obj, list):
         for v in obj:
             yield from keys(v, key)
+
+
+def registry(image: str) -> str:
+    head, sep, _ = image.partition("/")
+    return head if sep and ("." in head or ":" in head or head == "localhost") else "docker.io"
 
 
 def check_helm(root: Path, app: Path) -> list[str]:
@@ -143,6 +153,20 @@ def check(root: Path) -> list[str]:
                                 errors.append(f"{where}: 組み込みの ClusterRole は aggregate できません")
                     if any(isinstance(v, str) and v for v in keys(spec, "priorityClassName")):
                         errors.append(f"{where}: priorityClassName は使えません。消してください")
+                    images = [i for i in keys(spec, "image") if isinstance(i, str)]
+                    images += [i.get("reference", "") for i in keys(spec, "image") if isinstance(i, dict)]
+                    for image in images:
+                        if registry(image) not in REGISTRIES:
+                            errors.append(f"{where}: イメージ {image} のレジストリは使えません。Docker Hub や ghcr.io など docs/rules.md にあるものを使ってください")
+                    for vols in keys(spec, "volumes"):
+                        for vol in vols if isinstance(vols, list) else []:
+                            bad = set(vol) - {"name"} - VOLUMES
+                            if bad:
+                                errors.append(f"{where}: volume の {', '.join(sorted(bad))} は使えません。使える種類は docs/rules.md にあります")
+                    for mounts in keys(spec, "volumeMounts"):
+                        for m in mounts if isinstance(mounts, list) else []:
+                            if str(m.get("mountPath", "")).rstrip("/") in ("/proc", "/sys") or str(m.get("mountPath", "")).startswith(("/proc/", "/sys/")):
+                                errors.append(f"{where}: /proc と /sys の下には volume をマウントできません")
                     if kind == "Service" and spec.get("externalIPs"):
                         errors.append(f"{where}: externalIPs は使えません。外への公開は HTTPRoute でできます")
                     if kind == "Service" and spec.get("type") == "ExternalName":

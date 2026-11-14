@@ -113,6 +113,20 @@ kind: CiliumNetworkPolicy
 metadata: {name: allow-all, namespace: app-loose}
 """,
     "apps/Bad_Name/app.yaml": "kind: ConfigMap\nmetadata: {name: x}\n",
+    "apps/mount/app.yaml": """
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: x}
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: 10.0.0.1.nip.io/x
+        volumeMounts: [{name: n, mountPath: /proc/sys}]
+      initContainers: [{name: i, image: "python:3.13-alpine"}]
+      volumes: [{name: n, nfs: {server: 10.0.0.1, path: /}}, {name: i, image: {reference: localhost:5000/x}}]
+""",
 }
 
 with tempfile.TemporaryDirectory() as d:
@@ -121,7 +135,7 @@ with tempfile.TemporaryDirectory() as d:
         (root / path).parent.mkdir(parents=True, exist_ok=True)
         (root / path).write_text(body)
     errors = "\n".join(check(root))
-    for want in ["hostnames", "Namespace", "と同じ名前です", "cluster-admin", "failurePolicy", "がすでに入れています", "ディレクトリ名", "消すか、app-", "中のリソースを 1 つずつ", "API group", "admin は権限が広すぎる", "cilium.io", "externalIPs", "ExternalName は使えません", "組み込みの ClusterRole と同じ名前", "roles と rolebindings だけ", "hostnames に more", "priorityClassName は使えません", "Cluster は apps/", "escalate、bind", "サブディレクトリ", "EndpointSlice は Kubernetes", "aggregate できません", "Pod は apps/", "NetworkPolicy は使えません", "HTTPRoute を使ってください", "version は 1.2.3", "helm.yaml がありません", "values は", "CiliumNetworkPolicy は運営"]:
+    for want in ["hostnames", "Namespace", "と同じ名前です", "cluster-admin", "failurePolicy", "がすでに入れています", "ディレクトリ名", "消すか、app-", "中のリソースを 1 つずつ", "API group", "admin は権限が広すぎる", "cilium.io", "externalIPs", "ExternalName は使えません", "組み込みの ClusterRole と同じ名前", "roles と rolebindings だけ", "hostnames に more", "priorityClassName は使えません", "Cluster は apps/", "escalate、bind", "サブディレクトリ", "EndpointSlice は Kubernetes", "aggregate できません", "Pod は apps/", "NetworkPolicy は使えません", "HTTPRoute を使ってください", "version は 1.2.3", "helm.yaml がありません", "values は", "CiliumNetworkPolicy は運営", "10.0.0.1.nip.io/x のレジストリ", "localhost:5000/x のレジストリ", "volume の nfs は", "/proc と /sys"]:
         assert want in errors, f"{want} が検出されない:\n{errors}"
 
 assert check(Path(__file__).parent.parent) == [], check(Path(__file__).parent.parent)
