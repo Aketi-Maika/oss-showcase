@@ -13,3 +13,25 @@ spec:
     limits:
       cpu: "1"
       memory: 512Mi
+  # ダッシュボードの PostgreSQL データソースが使う。統計のビューだけを読める
+  managed:
+    roles:
+      - name: grafana_reader
+        login: true
+        inRoles:
+          - pg_monitor
+        connectionLimit: 3
+        passwordSecret:
+          name: grafana-db-reader
+---
+# リポジトリで公開される。読めるのは統計だけで、DB は namespace の外から届かない
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-db-reader
+  labels:
+    cnpg.io/reload: "true"
+type: kubernetes.io/basic-auth
+stringData:
+  username: grafana_reader
+  password: Prmc0LnwHvtfrnYyLYWzWoUwsOLM73dW
