@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-match
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-match
+  template:
+    metadata:
+      labels:
+        app: image-match
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/clouddev-code/image-match:0.1.0
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+              ephemeral-storage: 512Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-match
+spec:
+  selector:
+    app: image-match
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: image-match
+spec:
+  parentRefs:
+    - name: showcase
+      namespace: gateway
+  hostnames:
+    - image-match.showcase.cloudnativedays.jp
+  rules:
+    - backendRefs:
+        - name: image-match
+          port: 80
