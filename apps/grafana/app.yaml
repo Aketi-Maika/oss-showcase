@@ -13,6 +13,8 @@
 #     auth.anonymous:
 #       enabled: true
 #       org_role: Viewer
+#     dashboards:
+#       default_home_dashboard_path: /var/lib/grafana/dashboards/default/showcase.json
 #   # 同じ namespace の CloudNativePG の Cluster grafana-db に保存する
 #   env:
 #     GF_DATABASE_TYPE: postgres
@@ -24,6 +26,10 @@
 #       secretKeyRef:
 #         name: grafana-db-app
 #         key: password
+#     GF_READER_PASSWORD:
+#       secretKeyRef:
+#         name: grafana-db-reader
+#         key: password
 #   # 起動時に DB のマイグレーションが走る。LimitRange の既定値では間に合わない
 #   resources:
 #     requests:
@@ -32,6 +38,287 @@
 #     limits:
 #       cpu: "1"
 #       memory: 1Gi
+#   # 匿名の Viewer も /api/ds/query で任意の SQL を流せる。読み取り専用のロールで繋ぐ
+#   datasources:
+#     datasources.yaml:
+#       apiVersion: 1
+#       datasources:
+#         - name: TestData
+#           type: grafana-testdata-datasource
+#           uid: testdata
+#         - name: Prometheus
+#           type: prometheus
+#           uid: prometheus
+#           url: http://prometheus.app-prometheus.svc:9090
+#           isDefault: true
+#         - name: PostgreSQL
+#           type: grafana-postgresql-datasource
+#           uid: postgres
+#           url: grafana-db-rw:5432
+#           user: grafana_reader
+#           jsonData:
+#             database: app
+#             sslmode: require
+#             postgresVersion: 1800
+#           secureJsonData:
+#             password: $GF_READER_PASSWORD
+#   dashboardProviders:
+#     dashboardproviders.yaml:
+#       apiVersion: 1
+#       providers:
+#         - name: default
+#           type: file
+#           disableDeletion: true
+#           editable: false
+#           options:
+#             path: /var/lib/grafana/dashboards/default
+#   dashboards:
+#     default:
+#       showcase:
+#         json: |
+#           {
+#             "title": "OSS Showcase",
+#             "uid": "showcase",
+#             "refresh": "10s",
+#             "time": {
+#               "from": "now-1h",
+#               "to": "now"
+#             },
+#             "panels": [
+#               {
+#                 "type": "timeseries",
+#                 "title": "アプリごとの CPU",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 0,
+#                   "w": 8,
+#                   "h": 9
+#                 },
+#                 "datasource": {
+#                   "type": "prometheus",
+#                   "uid": "prometheus"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "short"
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "expr": "label_replace(sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\"}[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+#                     "legendFormat": "{{app}}"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "timeseries",
+#                 "title": "アプリごとのメモリ",
+#                 "gridPos": {
+#                   "x": 8,
+#                   "y": 0,
+#                   "w": 8,
+#                   "h": 9
+#                 },
+#                 "datasource": {
+#                   "type": "prometheus",
+#                   "uid": "prometheus"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "bytes"
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "expr": "label_replace(sum by (namespace) (container_memory_working_set_bytes{container!=\"\"}), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+#                     "legendFormat": "{{app}}"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "timeseries",
+#                 "title": "アプリごとの受信量",
+#                 "gridPos": {
+#                   "x": 16,
+#                   "y": 0,
+#                   "w": 8,
+#                   "h": 9
+#                 },
+#                 "datasource": {
+#                   "type": "prometheus",
+#                   "uid": "prometheus"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "Bps"
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "expr": "label_replace(sum by (namespace) (rate(container_network_receive_bytes_total[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+#                     "legendFormat": "{{app}}"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "timeseries",
+#                 "title": "WAIWAI 度（乱数）",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 9,
+#                   "w": 16,
+#                   "h": 8
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-testdata-datasource",
+#                   "uid": "testdata"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "scenarioId": "random_walk",
+#                     "seriesCount": 3
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "gauge",
+#                 "title": "盛り上がり（乱数）",
+#                 "gridPos": {
+#                   "x": 16,
+#                   "y": 9,
+#                   "w": 8,
+#                   "h": 8
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-testdata-datasource",
+#                   "uid": "testdata"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "min": 0,
+#                     "max": 100
+#                   }
+#                 },
+#                 "options": {
+#                   "reduceOptions": {
+#                     "calcs": [
+#                       "lastNotNull"
+#                     ]
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "scenarioId": "random_walk",
+#                     "min": 0,
+#                     "max": 100,
+#                     "startValue": 50
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "stat",
+#                 "title": "Grafana の DB の接続数",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 17,
+#                   "w": 6,
+#                   "h": 5
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT count(*) AS \"接続\" FROM pg_stat_activity WHERE datname = 'app'"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "stat",
+#                 "title": "Grafana の DB のサイズ",
+#                 "gridPos": {
+#                   "x": 6,
+#                   "y": 17,
+#                   "w": 6,
+#                   "h": 5
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT pg_database_size('app') AS \"サイズ\""
+#                   }
+#                 ],
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "bytes"
+#                   }
+#                 }
+#               },
+#               {
+#                 "type": "stat",
+#                 "title": "コミットしたトランザクション",
+#                 "gridPos": {
+#                   "x": 12,
+#                   "y": 17,
+#                   "w": 12,
+#                   "h": 5
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT xact_commit AS \"コミット\" FROM pg_stat_database WHERE datname = 'app'"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "table",
+#                 "title": "行の多いテーブル",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 22,
+#                   "w": 24,
+#                   "h": 8
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT relname AS \"テーブル\", n_live_tup AS \"行数\" FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10"
+#                   }
+#                 ]
+#               }
+#             ]
+#           }
 ---
 # Source: grafana/templates/serviceaccount.yaml
 apiVersion: v1
@@ -88,6 +375,8 @@ data:
     org_role = Viewer
     [auth.basic]
     enabled = false
+    [dashboards]
+    default_home_dashboard_path = /var/lib/grafana/dashboards/default/showcase.json
     [log]
     mode = console
     [paths]
@@ -101,6 +390,301 @@ data:
     domain = ''
     [unified_storage]
     index_path = /var/lib/grafana-search/bleve
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: TestData
+      type: grafana-testdata-datasource
+      uid: testdata
+    - isDefault: true
+      name: Prometheus
+      type: prometheus
+      uid: prometheus
+      url: http://prometheus.app-prometheus.svc:9090
+    - jsonData:
+        database: app
+        postgresVersion: 1800
+        sslmode: require
+      name: PostgreSQL
+      secureJsonData:
+        password: $GF_READER_PASSWORD
+      type: grafana-postgresql-datasource
+      uid: postgres
+      url: grafana-db-rw:5432
+      user: grafana_reader
+  dashboardproviders.yaml: |
+    apiVersion: 1
+    providers:
+    - disableDeletion: true
+      editable: false
+      name: default
+      options:
+        path: /var/lib/grafana/dashboards/default
+      type: file
+  download_dashboards.sh: |
+    #!/usr/bin/env sh
+    set -eufo pipefail
+    mkdir -p /var/lib/grafana/dashboards/default
+    mkdir -p /var/lib/grafana/dashboards/default
+---
+# Source: grafana/templates/dashboards-json-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-default
+  namespace: app-grafana
+  labels:
+    helm.sh/chart: grafana-14.4.1
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/version: "13.3.1"
+    dashboard-provider: default
+data:
+  showcase.json:
+    |-
+      {
+        "title": "OSS Showcase",
+        "uid": "showcase",
+        "refresh": "10s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "type": "timeseries",
+            "title": "アプリごとの CPU",
+            "gridPos": {
+              "x": 0,
+              "y": 0,
+              "w": 8,
+              "h": 9
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short"
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "expr": "label_replace(sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\"}[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+                "legendFormat": "{{app}}"
+              }
+            ]
+          },
+          {
+            "type": "timeseries",
+            "title": "アプリごとのメモリ",
+            "gridPos": {
+              "x": 8,
+              "y": 0,
+              "w": 8,
+              "h": 9
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "bytes"
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "expr": "label_replace(sum by (namespace) (container_memory_working_set_bytes{container!=\"\"}), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+                "legendFormat": "{{app}}"
+              }
+            ]
+          },
+          {
+            "type": "timeseries",
+            "title": "アプリごとの受信量",
+            "gridPos": {
+              "x": 16,
+              "y": 0,
+              "w": 8,
+              "h": 9
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "Bps"
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "expr": "label_replace(sum by (namespace) (rate(container_network_receive_bytes_total[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+                "legendFormat": "{{app}}"
+              }
+            ]
+          },
+          {
+            "type": "timeseries",
+            "title": "WAIWAI 度（乱数）",
+            "gridPos": {
+              "x": 0,
+              "y": 9,
+              "w": 16,
+              "h": 8
+            },
+            "datasource": {
+              "type": "grafana-testdata-datasource",
+              "uid": "testdata"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "scenarioId": "random_walk",
+                "seriesCount": 3
+              }
+            ]
+          },
+          {
+            "type": "gauge",
+            "title": "盛り上がり（乱数）",
+            "gridPos": {
+              "x": 16,
+              "y": 9,
+              "w": 8,
+              "h": 8
+            },
+            "datasource": {
+              "type": "grafana-testdata-datasource",
+              "uid": "testdata"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "min": 0,
+                "max": 100
+              }
+            },
+            "options": {
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ]
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "scenarioId": "random_walk",
+                "min": 0,
+                "max": 100,
+                "startValue": 50
+              }
+            ]
+          },
+          {
+            "type": "stat",
+            "title": "Grafana の DB の接続数",
+            "gridPos": {
+              "x": 0,
+              "y": 17,
+              "w": 6,
+              "h": 5
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT count(*) AS \"接続\" FROM pg_stat_activity WHERE datname = 'app'"
+              }
+            ]
+          },
+          {
+            "type": "stat",
+            "title": "Grafana の DB のサイズ",
+            "gridPos": {
+              "x": 6,
+              "y": 17,
+              "w": 6,
+              "h": 5
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT pg_database_size('app') AS \"サイズ\""
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "bytes"
+              }
+            }
+          },
+          {
+            "type": "stat",
+            "title": "コミットしたトランザクション",
+            "gridPos": {
+              "x": 12,
+              "y": 17,
+              "w": 12,
+              "h": 5
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT xact_commit AS \"コミット\" FROM pg_stat_database WHERE datname = 'app'"
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "title": "行の多いテーブル",
+            "gridPos": {
+              "x": 0,
+              "y": 22,
+              "w": 24,
+              "h": 8
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT relname AS \"テーブル\", n_live_tup AS \"行数\" FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10"
+              }
+            ]
+          }
+        ]
+      }
 ---
 # Source: grafana/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -184,9 +768,10 @@ spec:
         app.kubernetes.io/instance: grafana
         app.kubernetes.io/version: "13.3.1"
       annotations:
-        checksum/config: 929da6e66aec0e450a9d69069bd9fad1b50a74d098071ea56b8f9a758e168181
+        checksum/config: 0eb1f4d0ee770c7d886bbcaff3f353f2e94868186aac70cfe3c1e482b672ce6e
+        checksum/dashboards-json-config: 9ce181650610d3a4748b26c03865b700018403689cdb9a25528e38c34facfe82
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
-        checksum/secret: 049cb8a9883c41e1e9ca80d05183972ff3f294f7f76e1690bd86fd4a05d65a06
+        checksum/secret: 5c4af9043f01eef444eaf3298115293e2af4281292dd13f759d734b935d6cea0
         kubectl.kubernetes.io/default-container: grafana
     spec:
       
@@ -198,6 +783,27 @@ spec:
         runAsGroup: 472
         runAsNonRoot: true
         runAsUser: 472
+      initContainers:
+        - name: download-dashboards
+          image: "docker.io/curlimages/curl:8.23.0"
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh"]
+          args: [ "/etc/grafana/download_dashboards.sh" ]
+          env:
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/grafana/download_dashboards.sh"
+              subPath: download_dashboards.sh
+            - name: storage
+              mountPath: "/var/lib/grafana"
       enableServiceLinks: true
       containers:
         - name: grafana
@@ -222,6 +828,15 @@ spec:
               mountPath: "/var/lib/grafana"
             - name: search
               mountPath: "/var/lib/grafana-search"
+            - name: dashboards-default
+              mountPath: "/var/lib/grafana/dashboards/default/showcase.json"
+              subPath: "showcase.json"
+            - name: config
+              mountPath: "/etc/grafana/provisioning/datasources/datasources.yaml"
+              subPath: "datasources.yaml"
+            - name: config
+              mountPath: "/etc/grafana/provisioning/dashboards/dashboardproviders.yaml"
+              subPath: "dashboardproviders.yaml"
           ports:
             - name: grafana
               containerPort: 3000
@@ -267,6 +882,11 @@ spec:
                 secretKeyRef:
                   key: password
                   name: grafana-db-app
+            - name: "GF_READER_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: grafana-db-reader
             - name: "GF_DATABASE_HOST"
               value: "grafana-db-rw:5432"
             - name: "GF_DATABASE_NAME"
@@ -299,6 +919,9 @@ spec:
         - name: config
           configMap:
             name: grafana
+        - name: dashboards-default
+          configMap:
+            name: grafana-dashboards-default
         - name: storage
           emptyDir: {}
         - name: search
