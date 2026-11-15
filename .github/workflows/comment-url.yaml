@@ -22,11 +22,11 @@ jobs:
       # 明示すると pipefail が付き、gh pr diff の失敗で止まる
       - shell: bash
         run: |
-          names=$(gh pr diff "$PR" --name-only | sed -nE 's#^(cluster-)?apps/([^/]+)/.*#\2#p' | sort -u)
+          names=$(gh pr diff "$PR" --name-only | sed -nE 's#^(cluster-apps|apps|charts)/([^/]+)/.*#\2#p' | sort -u)
           [ -n "$names" ] || exit 0
           {
             echo "マージしました。1 分ほどで次の URL に表示されます。"
             echo
-            for n in $names; do echo "- http://$n.showcase.cloudnativedays.jp"; done
+            for n in $names; do echo "- https://$n.showcase.cloudnativedays.jp"; done
           } > body.md
           gh pr comment "$PR" --body-file body.md

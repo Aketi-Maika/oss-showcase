@@ -4,7 +4,7 @@ CloudNative Days のWAIWAI広場で動いている Kubernetes に、あなたの
 
 推しの OSS でも、AI と一緒に作った自作のアプリでも構いません。
 認証なしで pull できるコンテナイメージがあれば載せられます。
-このリポジトリに Pull Request を出してマージされると、1 分ほどで `http://<アプリの名前>.showcase.cloudnativedays.jp` に公開されます。
+このリポジトリに Pull Request を出してマージされると、1 分ほどで `https://<アプリの名前>.showcase.cloudnativedays.jp` に公開されます。
 
 ## しくみ
 
@@ -18,7 +18,7 @@ flowchart LR
     argo --> ns["app-あなたのアプリ"]
     gw["Gateway"] --> ns
   end
-  browser["ブラウザ"] -- "http://あなたのアプリ.showcase.cloudnativedays.jp" --> gw
+  browser["ブラウザ"] -- "https://あなたのアプリ.showcase.cloudnativedays.jp" --> gw
 ```
 
 main にマージされた YAML を、Argo CD がクラスタに同期します。
