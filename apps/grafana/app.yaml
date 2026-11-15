@@ -46,6 +46,11 @@
 #         - name: TestData
 #           type: grafana-testdata-datasource
 #           uid: testdata
+#         - name: Prometheus
+#           type: prometheus
+#           uid: prometheus
+#           url: http://prometheus.app-prometheus.svc:9090
+#           isDefault: true
 #         - name: PostgreSQL
 #           type: grafana-postgresql-datasource
 #           uid: postgres
@@ -75,33 +80,243 @@
 #             "title": "OSS Showcase",
 #             "uid": "showcase",
 #             "refresh": "10s",
-#             "time": {"from": "now-15m", "to": "now"},
+#             "time": {
+#               "from": "now-1h",
+#               "to": "now"
+#             },
 #             "panels": [
-#               {"type": "timeseries", "title": "WAIWAI 度（乱数）", "gridPos": {"x": 0, "y": 0, "w": 16, "h": 9},
-#                "datasource": {"type": "grafana-testdata-datasource", "uid": "testdata"},
-#                "targets": [{"refId": "A", "scenarioId": "random_walk", "seriesCount": 3}]},
-#               {"type": "gauge", "title": "盛り上がり（乱数）", "gridPos": {"x": 16, "y": 0, "w": 8, "h": 9},
-#                "datasource": {"type": "grafana-testdata-datasource", "uid": "testdata"},
-#                "fieldConfig": {"defaults": {"min": 0, "max": 100}},
-#                "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
-#                "targets": [{"refId": "A", "scenarioId": "random_walk", "min": 0, "max": 100, "startValue": 50}]},
-#               {"type": "stat", "title": "DB の接続数", "gridPos": {"x": 0, "y": 9, "w": 6, "h": 5},
-#                "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-#                "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-#                  "rawSql": "SELECT count(*) AS \"接続\" FROM pg_stat_activity WHERE datname = 'app'"}]},
-#               {"type": "stat", "title": "DB のサイズ", "gridPos": {"x": 6, "y": 9, "w": 6, "h": 5},
-#                "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-#                "fieldConfig": {"defaults": {"unit": "bytes"}},
-#                "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-#                  "rawSql": "SELECT pg_database_size('app') AS \"サイズ\""}]},
-#               {"type": "stat", "title": "コミットしたトランザクション", "gridPos": {"x": 12, "y": 9, "w": 12, "h": 5},
-#                "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-#                "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-#                  "rawSql": "SELECT xact_commit AS \"コミット\" FROM pg_stat_database WHERE datname = 'app'"}]},
-#               {"type": "table", "title": "行の多いテーブル", "gridPos": {"x": 0, "y": 14, "w": 24, "h": 9},
-#                "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-#                "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-#                  "rawSql": "SELECT relname AS \"テーブル\", n_live_tup AS \"行数\" FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10"}]}
+#               {
+#                 "type": "timeseries",
+#                 "title": "アプリごとの CPU",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 0,
+#                   "w": 8,
+#                   "h": 9
+#                 },
+#                 "datasource": {
+#                   "type": "prometheus",
+#                   "uid": "prometheus"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "short"
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "expr": "label_replace(sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\"}[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+#                     "legendFormat": "{{app}}"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "timeseries",
+#                 "title": "アプリごとのメモリ",
+#                 "gridPos": {
+#                   "x": 8,
+#                   "y": 0,
+#                   "w": 8,
+#                   "h": 9
+#                 },
+#                 "datasource": {
+#                   "type": "prometheus",
+#                   "uid": "prometheus"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "bytes"
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "expr": "label_replace(sum by (namespace) (container_memory_working_set_bytes{container!=\"\"}), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+#                     "legendFormat": "{{app}}"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "timeseries",
+#                 "title": "アプリごとの受信量",
+#                 "gridPos": {
+#                   "x": 16,
+#                   "y": 0,
+#                   "w": 8,
+#                   "h": 9
+#                 },
+#                 "datasource": {
+#                   "type": "prometheus",
+#                   "uid": "prometheus"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "Bps"
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "expr": "label_replace(sum by (namespace) (rate(container_network_receive_bytes_total[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+#                     "legendFormat": "{{app}}"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "timeseries",
+#                 "title": "WAIWAI 度（乱数）",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 9,
+#                   "w": 16,
+#                   "h": 8
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-testdata-datasource",
+#                   "uid": "testdata"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "scenarioId": "random_walk",
+#                     "seriesCount": 3
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "gauge",
+#                 "title": "盛り上がり（乱数）",
+#                 "gridPos": {
+#                   "x": 16,
+#                   "y": 9,
+#                   "w": 8,
+#                   "h": 8
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-testdata-datasource",
+#                   "uid": "testdata"
+#                 },
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "min": 0,
+#                     "max": 100
+#                   }
+#                 },
+#                 "options": {
+#                   "reduceOptions": {
+#                     "calcs": [
+#                       "lastNotNull"
+#                     ]
+#                   }
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "scenarioId": "random_walk",
+#                     "min": 0,
+#                     "max": 100,
+#                     "startValue": 50
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "stat",
+#                 "title": "Grafana の DB の接続数",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 17,
+#                   "w": 6,
+#                   "h": 5
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT count(*) AS \"接続\" FROM pg_stat_activity WHERE datname = 'app'"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "stat",
+#                 "title": "Grafana の DB のサイズ",
+#                 "gridPos": {
+#                   "x": 6,
+#                   "y": 17,
+#                   "w": 6,
+#                   "h": 5
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT pg_database_size('app') AS \"サイズ\""
+#                   }
+#                 ],
+#                 "fieldConfig": {
+#                   "defaults": {
+#                     "unit": "bytes"
+#                   }
+#                 }
+#               },
+#               {
+#                 "type": "stat",
+#                 "title": "コミットしたトランザクション",
+#                 "gridPos": {
+#                   "x": 12,
+#                   "y": 17,
+#                   "w": 12,
+#                   "h": 5
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT xact_commit AS \"コミット\" FROM pg_stat_database WHERE datname = 'app'"
+#                   }
+#                 ]
+#               },
+#               {
+#                 "type": "table",
+#                 "title": "行の多いテーブル",
+#                 "gridPos": {
+#                   "x": 0,
+#                   "y": 22,
+#                   "w": 24,
+#                   "h": 8
+#                 },
+#                 "datasource": {
+#                   "type": "grafana-postgresql-datasource",
+#                   "uid": "postgres"
+#                 },
+#                 "targets": [
+#                   {
+#                     "refId": "A",
+#                     "format": "table",
+#                     "rawQuery": true,
+#                     "editorMode": "code",
+#                     "rawSql": "SELECT relname AS \"テーブル\", n_live_tup AS \"行数\" FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10"
+#                   }
+#                 ]
+#               }
 #             ]
 #           }
 ---
@@ -181,6 +396,11 @@ data:
     - name: TestData
       type: grafana-testdata-datasource
       uid: testdata
+    - isDefault: true
+      name: Prometheus
+      type: prometheus
+      uid: prometheus
+      url: http://prometheus.app-prometheus.svc:9090
     - jsonData:
         database: app
         postgresVersion: 1800
@@ -226,33 +446,243 @@ data:
         "title": "OSS Showcase",
         "uid": "showcase",
         "refresh": "10s",
-        "time": {"from": "now-15m", "to": "now"},
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
         "panels": [
-          {"type": "timeseries", "title": "WAIWAI 度（乱数）", "gridPos": {"x": 0, "y": 0, "w": 16, "h": 9},
-           "datasource": {"type": "grafana-testdata-datasource", "uid": "testdata"},
-           "targets": [{"refId": "A", "scenarioId": "random_walk", "seriesCount": 3}]},
-          {"type": "gauge", "title": "盛り上がり（乱数）", "gridPos": {"x": 16, "y": 0, "w": 8, "h": 9},
-           "datasource": {"type": "grafana-testdata-datasource", "uid": "testdata"},
-           "fieldConfig": {"defaults": {"min": 0, "max": 100}},
-           "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
-           "targets": [{"refId": "A", "scenarioId": "random_walk", "min": 0, "max": 100, "startValue": 50}]},
-          {"type": "stat", "title": "DB の接続数", "gridPos": {"x": 0, "y": 9, "w": 6, "h": 5},
-           "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-           "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-             "rawSql": "SELECT count(*) AS \"接続\" FROM pg_stat_activity WHERE datname = 'app'"}]},
-          {"type": "stat", "title": "DB のサイズ", "gridPos": {"x": 6, "y": 9, "w": 6, "h": 5},
-           "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-           "fieldConfig": {"defaults": {"unit": "bytes"}},
-           "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-             "rawSql": "SELECT pg_database_size('app') AS \"サイズ\""}]},
-          {"type": "stat", "title": "コミットしたトランザクション", "gridPos": {"x": 12, "y": 9, "w": 12, "h": 5},
-           "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-           "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-             "rawSql": "SELECT xact_commit AS \"コミット\" FROM pg_stat_database WHERE datname = 'app'"}]},
-          {"type": "table", "title": "行の多いテーブル", "gridPos": {"x": 0, "y": 14, "w": 24, "h": 9},
-           "datasource": {"type": "grafana-postgresql-datasource", "uid": "postgres"},
-           "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code",
-             "rawSql": "SELECT relname AS \"テーブル\", n_live_tup AS \"行数\" FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10"}]}
+          {
+            "type": "timeseries",
+            "title": "アプリごとの CPU",
+            "gridPos": {
+              "x": 0,
+              "y": 0,
+              "w": 8,
+              "h": 9
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "short"
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "expr": "label_replace(sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\"}[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+                "legendFormat": "{{app}}"
+              }
+            ]
+          },
+          {
+            "type": "timeseries",
+            "title": "アプリごとのメモリ",
+            "gridPos": {
+              "x": 8,
+              "y": 0,
+              "w": 8,
+              "h": 9
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "bytes"
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "expr": "label_replace(sum by (namespace) (container_memory_working_set_bytes{container!=\"\"}), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+                "legendFormat": "{{app}}"
+              }
+            ]
+          },
+          {
+            "type": "timeseries",
+            "title": "アプリごとの受信量",
+            "gridPos": {
+              "x": 16,
+              "y": 0,
+              "w": 8,
+              "h": 9
+            },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "unit": "Bps"
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "expr": "label_replace(sum by (namespace) (rate(container_network_receive_bytes_total[2m])), \"app\", \"$1\", \"namespace\", \"app-(.*)\")",
+                "legendFormat": "{{app}}"
+              }
+            ]
+          },
+          {
+            "type": "timeseries",
+            "title": "WAIWAI 度（乱数）",
+            "gridPos": {
+              "x": 0,
+              "y": 9,
+              "w": 16,
+              "h": 8
+            },
+            "datasource": {
+              "type": "grafana-testdata-datasource",
+              "uid": "testdata"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "scenarioId": "random_walk",
+                "seriesCount": 3
+              }
+            ]
+          },
+          {
+            "type": "gauge",
+            "title": "盛り上がり（乱数）",
+            "gridPos": {
+              "x": 16,
+              "y": 9,
+              "w": 8,
+              "h": 8
+            },
+            "datasource": {
+              "type": "grafana-testdata-datasource",
+              "uid": "testdata"
+            },
+            "fieldConfig": {
+              "defaults": {
+                "min": 0,
+                "max": 100
+              }
+            },
+            "options": {
+              "reduceOptions": {
+                "calcs": [
+                  "lastNotNull"
+                ]
+              }
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "scenarioId": "random_walk",
+                "min": 0,
+                "max": 100,
+                "startValue": 50
+              }
+            ]
+          },
+          {
+            "type": "stat",
+            "title": "Grafana の DB の接続数",
+            "gridPos": {
+              "x": 0,
+              "y": 17,
+              "w": 6,
+              "h": 5
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT count(*) AS \"接続\" FROM pg_stat_activity WHERE datname = 'app'"
+              }
+            ]
+          },
+          {
+            "type": "stat",
+            "title": "Grafana の DB のサイズ",
+            "gridPos": {
+              "x": 6,
+              "y": 17,
+              "w": 6,
+              "h": 5
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT pg_database_size('app') AS \"サイズ\""
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "bytes"
+              }
+            }
+          },
+          {
+            "type": "stat",
+            "title": "コミットしたトランザクション",
+            "gridPos": {
+              "x": 12,
+              "y": 17,
+              "w": 12,
+              "h": 5
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT xact_commit AS \"コミット\" FROM pg_stat_database WHERE datname = 'app'"
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "title": "行の多いテーブル",
+            "gridPos": {
+              "x": 0,
+              "y": 22,
+              "w": 24,
+              "h": 8
+            },
+            "datasource": {
+              "type": "grafana-postgresql-datasource",
+              "uid": "postgres"
+            },
+            "targets": [
+              {
+                "refId": "A",
+                "format": "table",
+                "rawQuery": true,
+                "editorMode": "code",
+                "rawSql": "SELECT relname AS \"テーブル\", n_live_tup AS \"行数\" FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10"
+              }
+            ]
+          }
         ]
       }
 ---
@@ -338,10 +768,10 @@ spec:
         app.kubernetes.io/instance: grafana
         app.kubernetes.io/version: "13.3.1"
       annotations:
-        checksum/config: c889ee992684cca4b104c86a84bf1a8b0791036077afbabadb62e23c435e9801
-        checksum/dashboards-json-config: dce45553ef1174957073c27889f8582211fe8f984795b5e9c89dc202a90f7a6b
+        checksum/config: 0eb1f4d0ee770c7d886bbcaff3f353f2e94868186aac70cfe3c1e482b672ce6e
+        checksum/dashboards-json-config: 9ce181650610d3a4748b26c03865b700018403689cdb9a25528e38c34facfe82
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
-        checksum/secret: e7b0857857c10915ffb54e24e7a15ac42b842a2bcc15edbb9500a8c100fa20ce
+        checksum/secret: 5c4af9043f01eef444eaf3298115293e2af4281292dd13f759d734b935d6cea0
         kubectl.kubernetes.io/default-container: grafana
     spec:
       
