@@ -1,0 +1,32 @@
+repoURL: https://raw.githubusercontent.com/konoe-akitoshi/shumoku/helm-repo
+chart: shumoku
+version: 0.2.0
+values: |
+  replicaCount: 1
+  demoMode: true
+  persistence:
+    enabled: false
+  ingress:
+    enabled: false
+  httproute:
+    enabled: false
+  auth:
+    # Public test value; proxy authentication disables local administrator login.
+    bootstrapAdminPassword: showcase-demo-only
+    secureCookies: true
+  env:
+    - name: SHUMOKU_PROXY_AUTH_ENABLED
+      value: "true"
+    - name: SHUMOKU_PROXY_AUTH_DEFAULT_ROLE
+      value: viewer
+    - name: SHUMOKU_PROXY_AUTH_ROLE_HEADER
+      value: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+      ephemeral-storage: 64Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+      ephemeral-storage: 1Gi
