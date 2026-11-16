@@ -1,0 +1,24 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: shumoku
+spec:
+  parentRefs:
+    - name: showcase
+      namespace: gateway
+  hostnames:
+    - shumoku.showcase.cloudnativedays.jp
+  rules:
+    - filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            # Every visitor receives viewer access, including WebSocket upgrades.
+            set:
+              - name: X-Auth-Request-User
+                value: showcase-visitor
+            remove:
+              - X-Auth-Request-Email
+              - X-Auth-Request-Groups
+      backendRefs:
+        - name: shumoku
+          port: 8080
