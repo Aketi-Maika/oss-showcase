@@ -3,6 +3,7 @@
 scripts/render_portal.py が、このファイルを configmap.yaml に埋め込む。直したら render_portal.py を実行する。
 """
 import base64
+import datetime
 import hashlib
 import html
 import json
@@ -21,6 +22,13 @@ TTL = 10
 
 # CloudNative Days のロゴの 2 色。アプリ名から決め、同じアプリはいつも同じ色にする
 TILE_COLORS = ('blue', 'magenta')
+# キーノートで使うアプリ。先頭に並べ、アプリ名の代わりに何ができるかを出す。check.py の KEYNOTE と揃える
+KEYNOTE = {'sanposhiho': 'スライド<br>資料', 'comments': 'コメント<br>を送る'}
+KEYNOTE_SPEAKER = 'sanposhiho'
+# 強調するのはキーノートの前後だけ。終わったら、ほかのアプリと同じタイルに戻す
+JST = datetime.timezone(datetime.timedelta(hours=9))
+KEYNOTE_FROM = datetime.datetime(2026, 11, 18, 11, 0, tzinfo=JST)
+KEYNOTE_TO = datetime.datetime(2026, 11, 18, 11, 50, tzinfo=JST)
 MASCOTS = 'https://cloudnativedays.jp/images/mascots'
 REPO = 'https://github.com/cloudnativedaysjp/oss-showcase'
 # github.com/cloudnativedaysjp/oss-showcase を指す QR コード。qrencode -t SVG で作った
@@ -80,6 +88,11 @@ a.hex:focus-visible::after { inset: calc(var(--s) * -.04); z-index: -2; backgrou
 .name { min-inline-size: 0; font-weight: 700; line-height: 1.15; font-size: calc(var(--s) * .125); overflow-wrap: anywhere;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .name.long { font-size: calc(var(--s) * .085); }
+/* キーノートのタイル。ほかのアプリと色を変え、小さな見出しを付ける */
+.keynote { --tile: var(--ink); }
+.keynote small { display: block; color: var(--orange); font-weight: 700; letter-spacing: .08em; font-size: calc(var(--s) * .075); }
+.keynote .name { display: block; }
+.keynote small.who { color: inherit; opacity: .8; letter-spacing: 0; margin-top: .3em; }
 
 /* 動いているアプリの数。蜂の巣の最初の 1 枚にする */
 .count { --tile: var(--orange); color: var(--ink); }
@@ -211,13 +224,22 @@ def hosts() -> list[str]:
         return _cache["hosts"]
 
 
-def page(names: list[str]) -> str:
+def page(names: list[str], now: datetime.datetime | None = None) -> str:
+    now = now or datetime.datetime.now(JST)
+    keynote = KEYNOTE if KEYNOTE_FROM <= now < KEYNOTE_TO else {}
     tiles = [f'<li style="--i:0"><div class="hex count"><b>{len(names)}</b><span>動いている<br>アプリ</span></div></li>']
-    for i, h in enumerate(names, start=1):
+    # キーノートのアプリを KEYNOTE の順で先頭に寄せる。sorted は安定なので、ほかの並びは変わらない
+    order = list(keynote)
+    ordered = sorted(names, key=lambda h: order.index(n) if (n := h.split(".")[0]) in keynote else len(order))
+    for i, h in enumerate(ordered, start=1):
         name = h.split(".")[0]
-        tiles.append(
-            f'<li style="--i:{i}"><a class="hex {TILE_COLORS[zlib.crc32(h.encode()) % 2]}" href="https://{html.escape(h)}/">'
-            f'<span class="name{" long" if len(name) > 13 else ""}">{html.escape(name)}</span></a></li>')
+        if name in keynote:
+            cls = "keynote"
+            label = f'<span class="name"><small>KEYNOTE</small>{keynote[name]}<small class="who">{KEYNOTE_SPEAKER}</small></span>'
+        else:
+            cls = TILE_COLORS[zlib.crc32(h.encode()) % 2]
+            label = f'<span class="name{" long" if len(name) > 13 else ""}">{html.escape(name)}</span>'
+        tiles.append(f'<li style="--i:{i}"><a class="hex {cls}" href="https://{html.escape(h)}/">{label}</a></li>')
     label = "最初の<br>1 枚に" if not names else "あなたの<br>アプリ"
     tiles.append(f'<li style="--i:{len(names) + 1}"><a class="hex invite" href="{REPO}">'
                  f'<span class="name"><span class="plus">＋</span>{label}</span></a></li>')

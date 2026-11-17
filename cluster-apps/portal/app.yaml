@@ -43,7 +43,7 @@ spec:
       labels:
         app: portal
       annotations:
-        showcase.cloudnativedays.jp/server-sha256: 6b18a85d239bfa843bd37c68e46c92ea9503abdf0fc7c693aee4d711048f6809
+        showcase.cloudnativedays.jp/server-sha256: 62cb725feb6a8ba6950058823f01c355432276ac59a2fcf10c1ba0e22ac5e061
     spec:
       serviceAccountName: portal
       securityContext:
