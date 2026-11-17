@@ -1,0 +1,857 @@
+# 話すときに使う、展示のセキュリティの解説ページ。index.html から kubectl create configmap --dry-run=client -o yaml で作る
+apiVersion: v1
+data:
+  index.html: |
+    <!doctype html>
+    <html lang="ja">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>OSS Showcase の守り方</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+    <style>
+    /* 縦に 1 本のスクロール。中心は「攻撃 → 4 つの層」のシミュレータ。CND のポータルと同じ紺、マゼンタ、オレンジを使う */
+    :root {
+      --bg: #f3f7fb;
+      --surface: #ffffff;
+      --sunk: #e7eef5;
+      --ink: #1e2d3d;
+      --muted: #4c5b6c;
+      --line: #cfdae5;
+      --blue: #216a9c;
+      --magenta: #be4493;
+      --magenta-soft: #f6e3ef;
+      --orange: #c97a0a;
+      --orange-soft: #fbefd9;
+      --code-bg: #14212f;
+      --code-ink: #dbe7f2;
+      --code-dim: #8ea3b8;
+      --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      --font-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+      --step-0: clamp(1rem, 0.95rem + 0.3vw, 1.15rem);
+      --step-1: clamp(1.2rem, 1.1rem + 0.5vw, 1.45rem);
+      --step-2: clamp(1.5rem, 1.3rem + 1vw, 2.1rem);
+      --step-3: clamp(2rem, 1.5rem + 2.4vw, 3.6rem);
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0e1924; --surface: #152331; --sunk: #1b2c3d; --ink: #e5eef7; --muted: #a2b3c4; --line: #2b3f53;
+        --blue: #6cb2e3; --magenta: #e584c2; --magenta-soft: #3a2232; --orange: #f2a940; --orange-soft: #3a2c16;
+        --code-bg: #0a131c; --code-ink: #dbe7f2; --code-dim: #7f95ab;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0e1924; --surface: #152331; --sunk: #1b2c3d; --ink: #e5eef7; --muted: #a2b3c4; --line: #2b3f53;
+      --blue: #6cb2e3; --magenta: #e584c2; --magenta-soft: #3a2232; --orange: #f2a940; --orange-soft: #3a2c16;
+      --code-bg: #0a131c; --code-ink: #dbe7f2; --code-dim: #7f95ab;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+    body { margin: 0; }
+    body {
+      background: var(--bg); color: var(--ink);
+      font-family: var(--font-body); font-weight: 500; font-size: var(--step-0); line-height: 1.75;
+      word-break: auto-phrase; line-break: strict; text-wrap: pretty;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; }
+    h1, h2, h3 { font-weight: 900; line-height: 1.3; text-wrap: balance; word-break: auto-phrase; margin: 0; }
+    h2 { font-size: var(--step-2); }
+    h3 { font-size: var(--step-1); font-weight: 700; }
+    p { margin: 0; }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible { outline: 3px solid var(--magenta); outline-offset: 3px; border-radius: 4px; }
+    code { font-family: var(--font-code); font-size: 0.88em; background: var(--sunk); padding: 0.05em 0.35em; border-radius: 4px; }
+
+    /* 見出しの横に、六角形をひとつ置く。ポータルのタイルと同じ形 */
+    .hex { display: inline-block; width: 0.9em; aspect-ratio: 1 / 1.1547; background: var(--magenta);
+      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); flex: none; }
+    .sec-head { display: flex; align-items: center; gap: 0.6em; }
+    .sec-head .hex { width: 0.7em; }
+
+    section { padding-block: clamp(48px, 7vw, 96px); border-top: 1px solid var(--line); }
+    .lede { color: var(--muted); max-width: 58em; margin-top: 0.8em; }
+
+    /* ---------- ヒーロー ---------- */
+    .hero { padding-block: clamp(40px, 8vw, 110px) clamp(32px, 5vw, 64px); }
+    .hero .kicker { color: var(--blue); font-weight: 700; display: flex; align-items: center; gap: 0.5em; }
+    .hero h1 { font-size: var(--step-3); margin-top: 0.5em; max-width: 22em; }
+    .hero h1 .yaml { font-family: var(--font-code); font-weight: 700; color: var(--magenta); }
+    .hero .lede { font-size: var(--step-1); margin-top: 1em; }
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 2em; font-weight: 700; }
+    .flow span { padding: 0.35em 0.8em; border: 2px solid var(--line); border-radius: 999px; background: var(--surface); }
+    .flow span.end { border-color: var(--magenta); color: var(--magenta); }
+    .flow i { font-style: normal; color: var(--muted); }
+
+    /* ---------- 前提：守るもの ---------- */
+    .goals { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 2em; }
+    .goal { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; display: grid; gap: 6px; }
+    .goal b { font-size: var(--step-1); }
+    .goal p { color: var(--muted); }
+    .allowed { margin-top: 2.4em; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .allowed > div { min-width: 0; }
+    .allowed h3 { margin-bottom: 0.5em; }
+    .allowed ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+    @media (max-width: 720px) { .allowed { grid-template-columns: 1fr; } }
+
+    /* ---------- 構成 ---------- */
+    .arch { margin-top: 2em; display: grid; grid-template-columns: 1fr auto 1.3fr; gap: 18px; align-items: stretch; }
+    .arch .col { display: grid; gap: 14px; align-content: start; min-width: 0; }
+    .box { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+    .box.visitor { border-top: 4px solid var(--blue); }
+    .box.staff { border-top: 4px solid var(--magenta); }
+    .box .tag { font-size: 0.82em; font-weight: 700; color: var(--muted); }
+    .box h3 { margin-top: 2px; }
+    .box p, .box li { color: var(--muted); }
+    .box ul { margin: 6px 0 0; padding-left: 1.2em; }
+    .arrow { align-self: center; font-size: 2em; color: var(--muted); font-weight: 900; }
+    .cluster { background: var(--sunk); border-radius: 16px; padding: 18px; display: grid; gap: 12px; }
+    .cluster .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; font-weight: 700; font-size: 0.92em; }
+    .chip small { display: block; font-weight: 500; color: var(--muted); }
+    @media (max-width: 860px) { .arch { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; } }
+
+    /* ---------- 4 つの層 ---------- */
+    .layers { margin-top: 2em; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: layer; }
+    .layer { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+    .layer .num { font-family: var(--font-code); font-weight: 700; color: var(--magenta); }
+    .layer p { color: var(--muted); }
+    .layer ul { margin: 0; padding-left: 1.1em; font-size: 0.94em; display: grid; gap: 2px; }
+    .layer .role { font-weight: 700; color: var(--ink); }
+    @media (max-width: 900px) { .layers { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .layers { grid-template-columns: 1fr; } }
+
+    /* ---------- シミュレータ ---------- */
+    .sim { margin-top: 2em; display: grid; grid-template-columns: minmax(250px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .picker { display: grid; gap: 14px; min-width: 0; }
+    .picker h3 { font-size: 0.95em; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+    .picker .group { display: grid; gap: 6px; }
+    .attack-btn {
+      font: inherit; font-weight: 700; text-align: left; color: var(--ink); cursor: pointer;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .attack-btn:hover { border-color: var(--blue); }
+    .attack-btn[aria-pressed="true"] { border-color: var(--magenta); background: var(--magenta-soft); }
+    .attack-btn .hex { width: 0.7em; background: var(--line); }
+    .attack-btn[aria-pressed="true"] .hex { background: var(--magenta); }
+
+    .stage { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: clamp(16px, 2.5vw, 28px); display: grid; gap: 22px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+    .stage .what { display: grid; gap: 6px; }
+    .stage .what .label { color: var(--muted); font-weight: 700; font-size: 0.9em; }
+    .stage h3 { font-size: var(--step-2); font-weight: 900; }
+    .track { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .lane { border-radius: 10px; padding: 12px 10px 14px; background: var(--sunk); display: grid; gap: 6px; justify-items: center; text-align: center; min-width: 0; transition: background .25s; }
+    .lane .lname { font-weight: 700; font-size: 0.86em; color: var(--muted); }
+    .lane .state { font-weight: 900; font-size: var(--step-1); color: var(--muted); }
+    .lane[data-s="stop"] { background: var(--magenta-soft); }
+    .lane[data-s="stop"] .state { color: var(--magenta); }
+    .lane[data-s="log"] { background: var(--orange-soft); }
+    .lane[data-s="log"] .state { color: var(--orange); }
+    .lane[data-s="pass"] .state { color: var(--muted); opacity: .6; }
+    .token { position: absolute; top: -10px; left: 0; width: 20px; aspect-ratio: 1/1.1547; background: var(--blue);
+      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); transition: left .7s cubic-bezier(.3,.7,.2,1); }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.86em; color: var(--muted); }
+    .legend span::before { content: ""; display: inline-block; width: 0.8em; height: 0.8em; border-radius: 3px; margin-right: 0.35em; vertical-align: -0.05em; background: var(--sunk); }
+    .legend .s::before { background: var(--magenta); }
+    .legend .l::before { background: var(--orange); }
+    .how { display: grid; gap: 10px; }
+    .how ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+    .how .why { color: var(--muted); }
+    pre {
+      margin: 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 16px;
+      font-family: var(--font-code); font-size: 0.82em; line-height: 1.6; overflow-x: auto; white-space: pre;
+    }
+    pre .c { color: var(--code-dim); }
+    pre code { background: none; padding: 0; font-size: 1em; color: inherit; }
+    .src { font-size: 0.82em; color: var(--muted); font-family: var(--font-code); }
+    .stage > * { min-width: 0; }
+    @media (max-width: 900px) { .sim { grid-template-columns: minmax(0, 1fr); } .stage { position: static; } }
+    @media (max-width: 520px) { .track { grid-template-columns: 1fr 1fr; } .token { display: none; } }
+
+    /* ---------- 原則 ---------- */
+    .principles { margin-top: 2em; display: grid; gap: 0; }
+    .principle { display: grid; grid-template-columns: minmax(200px, 0.9fr) 1.6fr; gap: 24px; padding-block: 22px; border-bottom: 1px solid var(--line); }
+    .principle:first-child { border-top: 1px solid var(--line); }
+    .principle h3 { color: var(--ink); }
+    .principle p { color: var(--muted); }
+    .principle .ex { margin-top: 6px; font-size: 0.92em; }
+    @media (max-width: 720px) { .principle { grid-template-columns: 1fr; gap: 6px; } }
+
+    /* ---------- 見つけた穴 ---------- */
+    .holes { margin-top: 2em; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+    .hole { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+    .hole .who { font-size: 0.85em; font-weight: 700; color: var(--blue); }
+    .hole dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+    .hole dt { font-weight: 700; color: var(--magenta); white-space: nowrap; }
+    .hole dd { margin: 0; color: var(--muted); min-width: 0; }
+
+    /* ---------- 数字 ---------- */
+    .limits { margin-top: 2em; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 520px; font-variant-numeric: tabular-nums; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: 0.88em; color: var(--muted); font-weight: 700; }
+    td.n { font-family: var(--font-code); font-weight: 700; white-space: nowrap; }
+
+    /* ---------- 課題 ---------- */
+    .todo { margin-top: 2em; display: grid; gap: 14px; }
+    .todo .item { display: grid; grid-template-columns: 9em 1fr; gap: 16px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+    .todo .item b { color: var(--orange); }
+    .todo .item p { color: var(--muted); }
+    @media (max-width: 600px) { .todo .item { grid-template-columns: 1fr; gap: 4px; } }
+
+    footer { padding-block: 48px 64px; border-top: 1px solid var(--line); display: grid; gap: 16px; }
+    footer .links { display: flex; flex-wrap: wrap; gap: 10px 24px; font-weight: 700; }
+    footer p { color: var(--muted); font-size: 0.9em; }
+
+    /* 見つけた穴：一言、通り道、なぜと対策 */
+    .breaches { margin-top: 2em; display: grid; gap: 18px; }
+    .breach { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(18px, 2.4vw, 28px); display: grid; gap: 16px; min-width: 0; }
+    .breach .tag { font-size: 0.85em; font-weight: 700; color: var(--blue); }
+    .breach h3 { font-size: var(--step-1); font-weight: 900; }
+    .route { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .route .hop { background: var(--sunk); border-radius: 8px; padding: 6px 12px; font-weight: 700; font-size: 0.92em; }
+    .route .hop small { display: block; font-weight: 500; color: var(--muted); font-size: 0.85em; }
+    .route .hop.bad { background: var(--magenta-soft); color: var(--magenta); outline: 2px solid var(--magenta); }
+    .route .hop.bad small { color: var(--magenta); }
+    .route .hop.goal { background: var(--ink); color: var(--bg); }
+    .route .hop.goal small { color: var(--bg); opacity: .75; }
+    .route i { font-style: normal; font-weight: 900; color: var(--muted); }
+    .fix { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+    .fix div { display: grid; gap: 2px; min-width: 0; align-content: start; }
+    .fix b { font-size: 0.85em; }
+    .fix .why b { color: var(--magenta); }
+    .fix .how b { color: var(--blue); }
+    .fix p { color: var(--muted); }
+    .breach .note { font-size: 0.9em; color: var(--muted); background: var(--sunk); border-radius: 8px; padding: 8px 12px; }
+    .breach .note b { color: var(--ink); }
+    @media (max-width: 720px) { .fix { grid-template-columns: 1fr; } }
+
+    /* YAML で見える世界と、見えない世界 */
+    .worlds { margin-top: 2em; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .world { border-radius: 14px; padding: clamp(18px, 2.4vw, 28px); display: grid; gap: 12px; align-content: start; min-width: 0; }
+    .world.k8s { background: var(--surface); border: 1px solid var(--line); }
+    .world.app { background: var(--code-bg); color: var(--code-ink); }
+    .world .tag { font-size: 0.85em; font-weight: 700; }
+    .world.k8s .tag { color: var(--blue); }
+    .world.app .tag { color: var(--orange); }
+    .world h3 { font-weight: 900; }
+    .world ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+    .world.k8s li { color: var(--muted); }
+    .world.app li { color: var(--code-ink); opacity: .9; }
+    .world .verdict { font-weight: 700; }
+    .world.k8s .verdict { color: var(--blue); }
+    .world.app .verdict { color: var(--orange); }
+    .world pre { background: var(--sunk); color: var(--ink); }
+    .world.app pre { background: rgba(255,255,255,.06); color: var(--code-ink); }
+    .world.app code { background: rgba(255,255,255,.14); color: var(--code-ink); }
+    .world pre code { background: none; padding: 0; font-size: 1em; color: inherit; }
+    @media (max-width: 760px) { .worlds { grid-template-columns: 1fr; } }
+    .runtime { margin-top: 18px; overflow-x: auto; }
+    .runtime table { min-width: 560px; }
+    .runtime td:first-child { font-weight: 700; white-space: nowrap; }
+    .runtime td.mech { font-weight: 700; color: var(--magenta); white-space: nowrap; }
+
+    /* エージェントが PR を書く前提のリポジトリ */
+    .agent-split { margin-top: 2em; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .agent-split > div { border-radius: 14px; padding: 20px 22px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+    .agent-split .pass { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--blue); }
+    .agent-split .stop { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--magenta); }
+    .agent-split b { font-size: var(--step-1); }
+    .agent-split p { color: var(--muted); }
+    @media (max-width: 720px) { .agent-split { grid-template-columns: 1fr; } }
+    .agent-items { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 720px) { .agent-items { grid-template-columns: minmax(0, 1fr); } }
+    .agent-item pre { white-space: pre-wrap; }
+    .agent-item { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+    .agent-item h3 { font-size: 1.05em; }
+    .agent-item p { color: var(--muted); }
+    .agent-proof { margin-top: 18px; background: var(--sunk); border-radius: 12px; padding: 16px 20px; display: grid; gap: 4px; }
+    .agent-proof b { color: var(--ink); }
+    .agent-proof p { color: var(--muted); }
+
+    /* タブ。話す順に切り替える */
+    .tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; }
+    body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+    .tab { font: inherit; font-weight: 700; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 8px 16px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+    .tab .n { font-family: var(--font-code); font-size: 0.85em; color: var(--magenta); }
+    .tab:hover { color: var(--ink); background: var(--sunk); }
+    .tab[aria-selected="true"] { color: var(--surface); background: var(--ink); }
+    .tab[aria-selected="true"] .n { color: var(--surface); opacity: .8; }
+    .panel > section:first-child { border-top: 0; padding-top: clamp(24px, 3vw, 40px); }
+    .pager { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px 48px; }
+    .pager button { font: inherit; font-weight: 700; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 10px 20px; cursor: pointer; }
+    .pager button:hover { border-color: var(--magenta); color: var(--magenta); }
+    .pager .next { margin-left: auto; }
+    .principle { padding-block: 14px !important; }
+    .agent-split ul.plain { margin: 4px 0 0; padding-left: 1.2em; display: grid; gap: 4px; color: var(--muted); }
+
+    /* デザインの見直し：カードを減らし、六角形を印に使う */
+    #s-premise .goals { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+    #s-premise .goal { background: none; border: 0; border-radius: 0; padding: 0 0 0 1.6em; position: relative; }
+    #s-premise .goal::before { content: ""; position: absolute; left: 0; top: 0.45em; width: 0.9em; aspect-ratio: 1 / 1.1547; background: var(--magenta);
+      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+    @media (max-width: 640px) { #s-premise .goals { grid-template-columns: minmax(0, 1fr); } }
+    .layers { gap: 0 24px; }
+    .layer { background: none; border: 0; border-radius: 0; border-top: 3px solid var(--line); padding: 26px 0 0; position: relative; }
+    .layer::before { content: ""; position: absolute; top: -12px; left: 0; width: 20px; aspect-ratio: 1 / 1.1547; background: var(--magenta);
+      clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+    .layer .num { font-family: var(--font-body); font-weight: 900; font-size: var(--step-1); color: var(--ink); }
+    @media (max-width: 900px) { .layers { gap: 32px 24px; } }
+
+    @media (prefers-reduced-motion: reduce) { .token, .lane { transition: none; } }
+    </style>
+    </head>
+    <body>
+
+
+    <div class="wrap">
+
+    <header class="hero">
+      <p class="kicker"><span class="hex"></span>CloudNative Days WAIWAI広場 ／ OSS Showcase の裏側</p>
+      <h1>知らない人の <span class="yaml">YAML</span> が、<br>マージ 1 回で本番に入ってくる。</h1>
+      <p class="lede">OSS Showcase は、PR を 1 本出すだけで、会場の Kubernetes にアプリを載せられる展示です。<br>誰でも PR を出せるクラスタを、どう考えて守ったかを紹介します。</p>
+      <div class="flow" aria-label="来場者のアプリが公開されるまで">
+        <span>fork して YAML を書く</span><i>→</i><span>PR</span><i>→</i><span>CI</span><i>→</i><span>マージ</span><i>→</i><span>Argo CD が同期</span><i>→</i><span class="end">https://&lt;名前&gt;.showcase.cloudnativedays.jp</span>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="話の順番"><button class="tab" role="tab" id="tab-premise" aria-controls="p-premise" data-k="premise"><span class="n">1</span>前提</button><button class="tab" role="tab" id="tab-layers" aria-controls="p-layers" data-k="layers"><span class="n">2</span>4 つの層</button><button class="tab" role="tab" id="tab-attack" aria-controls="p-attack" data-k="attack"><span class="n">3</span>攻めてみる</button><button class="tab" role="tab" id="tab-holes" aria-controls="p-holes" data-k="holes"><span class="n">4</span>見つけた穴</button><button class="tab" role="tab" id="tab-agent" aria-controls="p-agent" data-k="agent"><span class="n">5</span>エージェント</button><button class="tab" role="tab" id="tab-youki" aria-controls="p-youki" data-k="youki"><span class="n">6</span>youki</button></nav>
+
+    <div class="panel" role="tabpanel" id="p-premise" aria-labelledby="tab-premise" hidden>
+    <section id="s-premise">
+      <div class="sec-head"><span class="hex"></span><h2>何を守るのか</h2></div>
+      <p class="lede">来場者を疑っているわけではありません。<br>それでも、知らない人が書いた YAML と、知らない人が作ったイメージは、信頼できないものとして扱うしかありません。<br>うっかりでも、わざとでも、次の 4 つが起きないようにしました。</p>
+      <div class="goals">
+        <div class="goal"><b>ほかの人の展示を止めない</b><p>CPU、メモリ、ディスクを 1 つのアプリが使い切らない。隣の namespace に手を出せない。</p></div>
+        <div class="goal"><b>ノードとクラスタを渡さない</b><p>コンテナからノードに抜けられない。運営が入れた制限を、中から外せない。</p></div>
+        <div class="goal"><b>踏み台にさせない</b><p>スキャン、スパム、クラウドのメタデータや内部ネットワークへの到達を止める。</p></div>
+        <div class="goal"><b>運営の秘密を漏らさない</b><p>証明書、管理者のパスワード、VM の認証情報に、来場者の Pod から届かない。</p></div>
+      </div>
+    </section>
+
+    <section id="s-principles">
+      <div class="sec-head"><span class="hex"></span><h2>何を意識したか</h2></div>
+      <div class="principles">
+        <div class="principle"><h3>CI は親切、クラスタは強制</h3><p>CI は直し方を早く伝えるため。守るのは API サーバと実行時の仕組み。</p></div>
+        <div class="principle"><h3>禁止ではなく、許すものを並べる</h3><p>リソース、volume、レジストリは使ってよいものだけ。IP 直書きを禁止しても、<code>nip.io</code> で迂回された。</p></div>
+        <div class="principle"><h3>書いた時点だけでなく、動き出した後まで</h3><p>Pod の中から API を叩いて、制限を外せないようにする。</p></div>
+        <div class="principle"><h3>運営のものは、来場者の PR が届かない場所に</h3><p>quota や NetworkPolicy は、運営のリポジトリから全アプリに入れる。</p></div>
+        <div class="principle"><h3>止めるか、記録するか</h3><p>正しいアプリが使わないものは止める。止めると壊れるものは、記録して見張る。</p></div>
+        <div class="principle"><h3>Kubernetes の組み込みで書く</h3><p>VAP と MAP の CEL で書き、Gatekeeper や Kyverno を足さない。</p></div>
+      </div>
+    </section>
+    <div class="pager"><button type="button" class="next" data-go="layers">次へ：4 つの層</button></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-layers" aria-labelledby="tab-layers" hidden>
+    <section id="s-layers">
+      <div class="sec-head"><span class="hex"></span><h2>守りは 4 つの層</h2></div>
+      <p class="lede">YAML がクラスタに入って動くまでに、止める場所が 4 回あります。<br>どこか 1 つが抜けても、後ろの層で止まるようにしました。</p>
+      <div class="layers">
+        <div class="layer">
+          <span class="num">① CI</span>
+          <span class="role">早く、優しく伝える</span>
+          <p><code>check.py</code> がルールを確かめ、直し方をログに出す。PR の中身を書き換えれば迂回できるので、これだけには頼らない。</p>
+        </div>
+        <div class="layer">
+          <span class="num">② Argo CD</span>
+          <span class="role">作れる種類と行き先を決める</span>
+          <ul><li>AppProject で、作れる種類を列挙</li><li>行き先は <code>app-&lt;名前&gt;</code> に固定</li><li><code>apps/</code> は YAML だけを読み、CI が見たものをそのまま入れる</li></ul>
+        </div>
+        <div class="layer">
+          <span class="num">③ API サーバ</span>
+          <span class="role">クラスタで強制する</span>
+          <ul><li>Pod Security の baseline</li><li>VAP で展示に固有のルール</li><li>MAP で seccomp などの既定値</li><li>ResourceQuota と LimitRange</li></ul>
+        </div>
+        <div class="layer">
+          <span class="num">④ 動いている最中</span>
+          <span class="role">動き出した後を縛る</span>
+          <ul><li>CiliumNetworkPolicy</li><li>Tetragon</li><li>youki と PID の上限</li><li>ノードの nftables</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="s-worlds">
+      <div class="sec-head"><span class="hex"></span><h2>YAML で見えるのは、Kubernetes の世界まで</h2></div>
+      <p class="lede">YAML で止められるのは、どんなリソースを作るかまでです。<br>コンテナの中でアプリが何をするかは、YAML には書かれていません。<br>そこで、通信、プロセス、資源の使い方を、実行時に縛る仕組みを入れています。</p>
+      <div class="worlds">
+        <div class="world k8s">
+          <span class="tag">Kubernetes の世界</span>
+          <h3>YAML に書いてあること</h3>
+          <pre><code>image: nginx
+    volumes: [emptyDir]
+    hostnames: [myapp.showcase…]
+    resources: { limits: { cpu: 500m } }</code></pre>
+          <ul>
+            <li>どの種類のリソースを、どの namespace に作るか</li>
+            <li>どのイメージを、どの権限と volume で動かすか</li>
+            <li>どのホスト名で公開するか</li>
+          </ul>
+          <p class="verdict">→ CI、Argo CD、API サーバで止められる</p>
+        </div>
+        <div class="world app">
+          <span class="tag">アプリの世界</span>
+          <h3>コンテナの中で起きること</h3>
+          <ul>
+            <li><code>image: nginx</code> と書いてあっても、中身が nginx とは限らない</li>
+            <li>起動してから、どこへ通信するか</li>
+            <li>何をダウンロードして、何を実行するか</li>
+            <li>CPU、メモリ、ディスク、プロセスをどれだけ使うか</li>
+            <li>カーネルに何を頼むか</li>
+          </ul>
+          <p class="verdict">→ YAML からは見えないので、実行時に縛る</p>
+        </div>
+      </div>
+      <div class="runtime">
+        <table>
+          <thead><tr><th>アプリがすること</th><th>縛る仕組み</th><th>何をしているか</th></tr></thead>
+          <tbody>
+            <tr><td>通信する</td><td class="mech">CiliumNetworkPolicy</td><td>外へは DNS、80 番、443 番だけ。隣のアプリ、メタデータサーバ、内部ネットワークには届かない</td></tr>
+            <tr><td>プロセスを実行する</td><td class="mech">Tetragon</td><td>すべてのプロセスの実行を、カーネルで記録する</td></tr>
+            <tr><td>カーネルに頼む</td><td class="mech">Tetragon、seccomp</td><td>user namespace を作ろうとしたら、その場で止める。seccomp で危ないシステムコールを絞る</td></tr>
+            <tr><td>CPU とメモリを使う</td><td class="mech">cgroup、ResourceQuota</td><td>コンテナごとの limits と、アプリごとの合計で縛る</td></tr>
+            <tr><td>ディスクを使う</td><td class="mech">ephemeral-storage</td><td>emptyDir とログは 1 アプリ 5Gi まで</td></tr>
+            <tr><td>プロセスを増やす</td><td class="mech">PID の上限</td><td>Pod ごとに 1024 まで</td></tr>
+            <tr><td>接続を受ける</td><td class="mech">nftables</td><td>送信元の IP ごとに、新しい接続を 1 秒 300 本まで</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <div class="pager"><button type="button" data-go="premise">前へ：前提</button><button type="button" class="next" data-go="attack">次へ：攻めてみる</button></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-attack" aria-labelledby="tab-attack" hidden>
+    <section id="s-sim">
+      <div class="sec-head"><span class="hex"></span><h2>攻撃を選んでみてください</h2></div>
+      <p class="lede">展示を開く前に、実際に試した攻め方です。<br>選ぶと、どの層で止まるかと、止めているルールの実物が出ます。</p>
+      <div class="sim">
+        <div class="picker" id="picker"></div>
+        <div class="stage" aria-live="polite">
+          <div class="what">
+                    <h3 id="a-title"></h3>
+            <p id="a-what"></p>
+          </div>
+          <div>
+            <div class="track" id="track">
+              <div class="token" id="token" aria-hidden="true"></div>
+              <div class="lane" data-k="ci"><span class="lname">① CI</span><span class="state"></span></div>
+              <div class="lane" data-k="argo"><span class="lname">② Argo CD</span><span class="state"></span></div>
+              <div class="lane" data-k="api"><span class="lname">③ API サーバ</span><span class="state"></span></div>
+              <div class="lane" data-k="run"><span class="lname">④ 動いている最中</span><span class="state"></span></div>
+            </div>
+            <div class="legend" style="margin-top:10px"><span class="s">止める</span><span>この層では見ない</span></div>
+          </div>
+          <div class="how">
+            <ul id="a-how"></ul>
+            <p class="why" id="a-why"></p>
+          </div>
+          <div>
+            <pre id="a-code"></pre>
+            <p class="src" id="a-src" style="margin-top:6px"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="pager"><button type="button" data-go="layers">前へ：4 つの層</button><button type="button" class="next" data-go="holes">次へ：見つけた穴</button></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-holes" aria-labelledby="tab-holes" hidden>
+    <section id="s-holes">
+      <div class="sec-head"><span class="hex"></span><h2>AI エージェントに攻めさせて見つけた穴</h2></div>
+      <p class="lede">公開前に、AI エージェント（Claude Code）に来場者の立場で穴を探させました。<br>本当に届いた穴があり、塞いでから公開しています。<br>最後の 1 つは、運営の設定ミスです。</p>
+      <div class="route" style="margin-top:1.4em" aria-label="穴の探し方"><span class="hop">来場者と同じ権限で YAML を書く</span><i>→</i><span class="hop">本番のクラスタで試す</span><i>→</i><span class="hop bad">届いたら、運営のルールで塞ぐ</span><i>→</i><span class="hop goal">同じ攻撃が止まることを確かめる</span></div>
+      <div class="breaches">
+        <article class="breach">
+          <span class="tag">エージェントが、実際に届かせた</span>
+          <h3>Gateway が、ノードの kubelet まで中継してしまった</h3>
+          <div class="route" aria-label="通り道"><span class="hop">インターネット</span><i>→</i><span class="hop">Gateway<small>ノードのネットワークで動く</small></span><i>→</i><span class="hop bad">手で書いた EndpointSlice<small>行き先：ノードの 10250 番</small></span><i>→</i><span class="hop goal">kubelet<small>ノードの管理用 API</small></span></div>
+          <p class="note"><b>EndpointSlice</b>：Service の転送先の一覧。普段は、selector に合う Pod を Kubernetes が自動で書き込む。selector のない Service なら、人が好きな IP とポートを書ける。</p>
+          <div class="fix">
+            <div class="why"><b>なぜ通ったか</b><p>Service の行き先を手で書けた。Gateway はノードで動くので、NetworkPolicy がかからない。</p></div>
+            <div class="how"><b>どう塞いだか</b><p>EndpointSlice は Kubernetes のコントローラだけが書けるようにした。ExternalName も先に塞いだ。</p></div>
+          </div>
+        </article>
+        <article class="breach">
+          <span class="tag">エージェントが、実際に外した</span>
+          <h3>YAML は正しいのに、動き出した後に自分で制限を外せた</h3>
+          <div class="route" aria-label="通り道"><span class="hop bad">Role<small>自分に cilium.io を許す</small></span><i>→</i><span class="hop">自分の Pod</span><i>→</i><span class="hop">API サーバ</span><i>→</i><span class="hop">NetworkPolicy を上書き</span><i>→</i><span class="hop goal">外へ自由に通信</span></div>
+          <div class="fix">
+            <div class="why"><b>なぜ通ったか</b><p>Role は来場者に許している。CI は YAML しか見ないので、Pod の中から API を叩く操作は止められない。</p></div>
+            <div class="how"><b>どう塞いだか</b><p>来場者の ServiceAccount からは、NetworkPolicy、quota、LimitRange を変えられないようにした。</p></div>
+          </div>
+        </article>
+        <article class="breach">
+          <span class="tag">エージェントが、設計のときに指摘した</span>
+          <h3>見るだけのはずの人が、DB に SQL を送れる</h3>
+          <div class="route" aria-label="通り道"><span class="hop">ログインなしの閲覧者</span><i>→</i><span class="hop bad">Grafana の API<small>/api/ds/query</small></span><i>→</i><span class="hop goal">Grafana の DB</span></div>
+          <div class="fix">
+            <div class="why"><b>なぜ通ったか</b><p>Grafana は閲覧者にも、データソースへのクエリを許している。</p></div>
+            <div class="how"><b>どう塞いだか</b><p>統計だけを読めるロールでつないだ。テーブルの中身、削除、ファイルの読み出しは拒否されることを確かめた。</p></div>
+          </div>
+        </article>
+        <article class="breach">
+          <span class="tag">運営の設定ミス</span>
+          <h3>守るための上限で、正しいアプリを止めた</h3>
+          <div class="route" aria-label="通り道"><span class="hop bad">ディスクの上限を追加<small>既定 1Gi、合計 2Gi</small></span><i>→</i><span class="hop">Pod が 3 つのアプリ</span><i>→</i><span class="hop goal">quota を超えて起動しない</span></div>
+          <div class="fix">
+            <div class="why"><b>なぜ通ったか</b><p>すでに動いている Pod には新しい上限がかからない。VM を作り直すまで気づかなかった。</p></div>
+            <div class="how"><b>どう塞いだか</b><p>既定を 200Mi、合計を 5Gi にした。制限を変えたら、作り直した環境で確かめる。</p></div>
+          </div>
+        </article>
+      </div>
+    </section>
+    <div class="pager"><button type="button" data-go="attack">前へ：攻めてみる</button><button type="button" class="next" data-go="agent">次へ：エージェント</button></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-agent" aria-labelledby="tab-agent" hidden>
+    <section id="s-agent">
+      <div class="sec-head"><span class="hex"></span><h2>エージェントが PR を書く前提のリポジトリ</h2></div>
+      <p class="lede">来場者の YAML は、AI エージェントが書くことも多いはずです。</p>
+      <div class="agent-split">
+        <div class="pass"><b>リポジトリは、通すため</b>
+          <ul class="plain">
+            <li>手順は <code>AGENTS.md</code> に 1 つだけ</li>
+            <li>CI のエラーは、直し方まで書く</li>
+            <li><code>apps/example/</code> をコピーして 3 か所変えれば動く</li>
+          </ul>
+        </div>
+        <div class="stop"><b>クラスタは、止めるため</b><p>誰が書いた YAML でも、API サーバと実行時の仕組みで同じように縛る。</p></div>
+      </div>
+      <div class="agent-proof"><p>README と AGENTS.md だけを渡したエージェントが、Mailpit を選んで CI を通る PR を出した。</p></div>
+    </section>
+    <div class="pager"><button type="button" data-go="holes">前へ：見つけた穴</button><button type="button" class="next" data-go="youki">次へ：youki</button></div>
+    </div>
+
+    <div class="panel" role="tabpanel" id="p-youki" aria-labelledby="tab-youki" hidden>
+    <section id="s-youki">
+      <div class="sec-head"><span class="hex"></span><h2>コンテナランタイムは youki</h2></div>
+      <p class="lede">来場者の Pod は、Rust で書かれた youki で動いています。<br>本当は user namespace で root ごと無害にしたかったのですが、youki ではまだ使えず、代わりに Tetragon で止めています。</p>
+    </section>
+    <div class="pager"><button type="button" data-go="agent">前へ：エージェント</button></div>
+    </div>
+
+    <footer>
+      <div class="links">
+        <a href="https://github.com/cloudnativedaysjp/oss-showcase">github.com/cloudnativedaysjp/oss-showcase</a>
+        <a href="https://portal.showcase.cloudnativedays.jp">ポータル</a>
+        <a href="https://grafana.showcase.cloudnativedays.jp">Grafana</a>
+        <a href="https://argocd.showcase.cloudnativedays.jp">Argo CD</a>
+      </div>
+      <p>穴を見つけたら、ぜひ教えてください。PR も歓迎です。</p>
+    </footer>
+
+    </div>
+
+    <script>
+    const ATTACKS = [
+      { group: "ノードを狙う", title: "hostPath でノードのファイルを読む",
+        what: "Pod に hostPath の volume を書き、ノードの / をマウントする。",
+        layers: { ci: "stop", argo: null, api: "stop", run: null },
+        how: ["CI の check.py が、使える volume の種類を確かめる", "Pod Security の baseline が hostPath を拒否する", "VAP showcase-volume が、許した 8 種類以外の volume を拒否する"],
+        why: "hostPath だけを禁止するのではなく、使ってよい種類を列挙している。新しい種類の volume が増えても通らない。",
+        code: `<span class="c"># policies/volume.yaml の考え方（要約）</span>
+    volume の種類は、次のどれかだけ:
+      configMap, secret, emptyDir, projected, downwardAPI,
+      persistentVolumeClaim, ephemeral, image
+    mountPath は /proc と /sys の下にできない`,
+        src: "oss-showcase-platform/policies/volume.yaml" },
+      { group: "ノードを狙う", title: "特権コンテナで動かす",
+        what: "securityContext に privileged: true や NET_ADMIN を書く。",
+        layers: { ci: null, argo: null, api: "stop", run: null },
+        how: ["namespace に Pod Security の baseline を付けている", "特権、hostNetwork、hostPort、既定より多い capability は API サーバが拒否する"],
+        why: "root で動かすことは許している。剥がしているのは、root が持つ強い権限のほう。",
+        code: `<span class="c"># argocd/applicationset.yaml</span>
+    managedNamespaceMetadata:
+      labels:
+        pod-security.kubernetes.io/enforce: baseline`,
+        src: "oss-showcase-platform/argocd/applicationset.yaml" },
+      { group: "ノードを狙う", title: "user namespace を作ってコンテナから抜ける",
+        what: "コンテナの中で unshare を実行し、新しい user namespace で capability を得る。",
+        layers: { ci: null, argo: null, api: null, run: "stop" },
+        how: ["Tetragon が、カーネルの create_user_ns を見張る", "CAP_SYS_ADMIN を持たないプロセスが呼んだら、その場で SIGKILL する"],
+        why: "コンテナから抜け出す CVE の多くが、user namespace を入口にしている。正しいアプリはほぼ使わないので、止める。",
+        code: `<span class="c"># namespace-defaults/tetragon.yaml（抜粋）</span>
+    kprobes:
+      - call: create_user_ns
+        selectors:
+          - matchCapabilities:
+              - type: Effective
+                operator: NotIn
+                values: [CAP_SYS_ADMIN]
+            matchActions:
+              - action: Sigkill`,
+        src: "oss-showcase-platform/namespace-defaults/tetragon.yaml" },
+      { group: "ノードを狙う", title: "Gateway を踏み台に kubelet へ",
+        what: "手で書いた EndpointSlice にノードの IP と 10250 番を書き、HTTPRoute で公開する。",
+        layers: { ci: "stop", argo: null, api: "stop", run: null },
+        how: ["CI が EndpointSlice と ExternalName を拒否する", "VAP が、来場者の namespace の EndpointSlice を Kubernetes のコントローラだけに書かせる"],
+        why: "Gateway の Envoy はノードのネットワークで動くので、NetworkPolicy がかからない。実際に、外から kubelet に届いた。",
+        code: `<span class="c"># policies/runtime.yaml より</span>
+    <span class="c"># 手で書いた EndpointSlice を Service に付けると、ノードのネットワークで動く</span>
+    <span class="c"># Gateway の Envoy が、ノードや内部ネットワークの任意の IP とポートへ転送する。</span>
+    <span class="c"># Kubernetes のコントローラだけに書かせる</span>`,
+        src: "oss-showcase-platform/policies/runtime.yaml" },
+      { group: "ノードを狙う", title: "運営と同じ優先度を名乗る",
+        what: "priorityClassName: system-node-critical を書き、ノードが混んだときにほかの Pod を追い出す。",
+        layers: { ci: "stop", argo: null, api: "stop", run: null },
+        how: ["CI が priorityClassName を拒否する", "VAP showcase-priority が、来場者の namespace の Pod の priorityClassName を拒否する"],
+        why: "Cilium、Tetragon、Argo CD には system-*-critical を付けている。来場者が同じ優先度を名乗ると、運営のコンポーネントが追い出される。",
+        code: `<span class="c"># policies/priority.yaml（抜粋）</span>
+    validations:
+      - expression: >-
+          !has(object.spec.priorityClassName) ||
+          object.spec.priorityClassName == '' || ...
+        message: priorityClassName は指定できない`,
+        src: "oss-showcase-platform/policies/priority.yaml" },
+
+      { group: "隣のアプリを狙う", title: "ほかの namespace に書き込む",
+        what: "YAML の metadata.namespace に kube-system や、ほかの来場者の app-xxx を書く。",
+        layers: { ci: "stop", argo: "stop", api: "stop", run: null },
+        how: ["CI が、app-&lt;名前&gt; 以外の namespace を拒否する", "Argo CD の行き先は app-&lt;ディレクトリ名&gt; に固定", "VAP showcase-tenant が、アプリごとに書ける namespace を 1 つに絞る"],
+        why: "kube-system という名前のディレクトリを作られても、行き先は app-kube-system になるので無害。",
+        code: `<span class="c"># argocd/applicationset.yaml</span>
+    destination:
+      <span class="c"># prefix を付けて kube-system や argocd という名前のディレクトリを無害にする</span>
+      namespace: "app-{{.path.basename}}"`,
+        src: "oss-showcase-platform/argocd/applicationset.yaml" },
+      { group: "隣のアプリを狙う", title: "ほかの人のホスト名を奪う",
+        what: "HTTPRoute の hostnames に、ほかのアプリの名前や portal を書く。",
+        layers: { ci: "stop", argo: null, api: "stop", run: null },
+        how: ["CI が hostnames を確かめる", "VAP showcase-hostname が、&lt;名前&gt;.showcase.cloudnativedays.jp 以外を拒否する"],
+        why: "ホスト名は namespace の名前から決まる。自分の名前以外は書けない。",
+        code: `<span class="c"># policies/tenant.yaml（抜粋）</span>
+    variables:
+      - name: host
+        expression: request.namespace.substring(4) + '.showcase.cloudnativedays.jp'
+    validations:
+      - expression: object.spec.hostnames.all(h, h == variables.host)`,
+        src: "oss-showcase-platform/policies/tenant.yaml" },
+      { group: "隣のアプリを狙う", title: "隣のアプリの Pod に直接つなぐ",
+        what: "ほかの来場者の Service や Pod の IP に、クラスタの中から直接つなぐ。",
+        layers: { ci: null, argo: null, api: null, run: "stop" },
+        how: ["各 namespace の CiliumNetworkPolicy が、ほかの来場者の namespace からの通信を拒否する", "受けるのは、同じ namespace、Gateway、ノード、API サーバからだけ"],
+        why: "公開の URL を経由すれば、ほかのアプリも開ける。直接はつながらない。",
+        code: `<span class="c"># namespace-defaults/network-policy.yaml（抜粋。右のコメントは説明用）</span>
+    ingress:
+      - fromEndpoints:
+          - {}            <span class="c"># 同じ namespace</span>
+      - fromEntities:
+          - ingress       <span class="c"># Gateway</span>
+          - host
+          - remote-node
+          - kube-apiserver`,
+        src: "oss-showcase-platform/namespace-defaults/network-policy.yaml" },
+      { group: "隣のアプリを狙う", title: "Role で自分に権限を渡し、制限を外す",
+        what: "Role で cilium.io の権限を自分に渡し、Pod の中から allow-all の NetworkPolicy を足す。",
+        layers: { ci: "stop", argo: "stop", api: "stop", run: null },
+        how: ["CI が Role の apiGroups の cilium.io と * を拒否する", "AppProject は CiliumNetworkPolicy を作らせない", "VAP showcase-runtime が、来場者の ServiceAccount による NetworkPolicy、quota、LimitRange の変更を拒否する"],
+        why: "YAML の時点のルールだけでは足りない。Pod の中から API を叩いたときにも止める。",
+        code: `<span class="c"># policies/runtime.yaml（抜粋）</span>
+    <span class="c"># 来場者の Pod が自分の ServiceAccount で API を叩き、運営が入れた制限を外すのを止める</span>
+    <span class="c"># 例: Role で cilium.io を許し、allow-all の CNP を足して egress の制限を無効にする</span>
+    message: 来場者の ServiceAccount は、ネットワークとリソースの制限を変えられない`,
+        src: "oss-showcase-platform/policies/runtime.yaml" },
+
+      { group: "外を狙う", title: "クラウドのメタデータサーバを読む",
+        what: "Pod から 169.254.169.254 に HTTP でつなぎ、VM の認証情報を取る。",
+        layers: { ci: null, argo: null, api: null, run: "stop" },
+        how: ["CiliumNetworkPolicy の egressDeny で、169.254.0.0/16 を拒否する"],
+        why: "メタデータサーバは world の 80 番に含まれる。80 番を開けたままでも、ここだけは届かないようにした。",
+        code: `<span class="c"># namespace-defaults/network-policy.yaml</span>
+    egressDeny:
+      - toCIDR:
+          - 169.254.0.0/16
+          - 10.0.0.0/8
+          - 172.16.0.0/12
+          - 192.168.0.0/16
+          - 100.64.0.0/10`,
+        src: "oss-showcase-platform/namespace-defaults/network-policy.yaml" },
+      { group: "外を狙う", title: "スキャンやスパムの送信元にする",
+        what: "Pod からインターネットの 22 番や 25 番に大量につなぐ。",
+        layers: { ci: null, argo: null, api: null, run: "stop" },
+        how: ["外向きは、DNS、API サーバ、80 番、443 番だけ", "VM がつながる内部ネットワークのアドレスにも届かない"],
+        why: "会場のクラスタから、よそを攻撃させないため。",
+        code: `<span class="c"># namespace-defaults/network-policy.yaml（抜粋）</span>
+    <span class="c"># 外向きは DNS、API サーバ、80 番と 443 番だけにする。スキャンやスパムの送信元にされないため</span>
+    - toEntities: [world, host, remote-node]
+      toPorts:
+        - ports:
+            - port: "80"
+            - port: "443"`,
+        src: "oss-showcase-platform/namespace-defaults/network-policy.yaml" },
+      { group: "外を狙う", title: "怪しいレジストリのイメージを使う",
+        what: "image に、IP を直書きしたレジストリや 10.0.0.1.nip.io/x を書く。",
+        layers: { ci: "stop", argo: null, api: "stop", run: "stop" },
+        how: ["CI と VAP showcase-image が、許したレジストリ以外を拒否する", "内部ネットワーク宛ての通信は、そもそも egressDeny で届かない"],
+        why: "最初は IP の直書きを禁止したが、nip.io で迂回できた。許すレジストリを列挙する形に変えた。",
+        code: `<span class="c"># policies/image.yaml</span>
+    ['docker.io', 'index.docker.io', 'ghcr.io', 'quay.io',
+     'registry.k8s.io', 'gcr.io', 'mirror.gcr.io',
+     'public.ecr.aws', 'mcr.microsoft.com', 'registry.gitlab.com']`,
+        src: "oss-showcase-platform/policies/image.yaml" },
+      { group: "外を狙う", title: "LoadBalancer や NodePort で直接公開する",
+        what: "Service の type を LoadBalancer にする。Ingress を書く。",
+        layers: { ci: "stop", argo: "stop", api: "stop", run: null },
+        how: ["CI が Ingress と externalIPs を拒否する", "AppProject は Ingress を作らせない", "ResourceQuota で LoadBalancer と NodePort を 0 にしている"],
+        why: "外への入口を Gateway だけにする。TLS もレート制限も、そこでまとめてかけられる。",
+        code: `<span class="c"># namespace-defaults/quota.yaml</span>
+    <span class="c"># 外部への公開は Gateway だけにする</span>
+    services.loadbalancers: "0"
+    services.nodeports: "0"`,
+        src: "oss-showcase-platform/namespace-defaults/quota.yaml" },
+
+      { group: "資源を食う", title: "CPU を使い切る",
+        what: "マイニングや無限ループで、ノードの CPU を使い切る。",
+        layers: { ci: null, argo: null, api: "stop", run: "stop" },
+        how: ["LimitRange が、limits を書かないコンテナに CPU 500m を付ける", "ResourceQuota で、1 アプリの合計を 4 コアまでにする", "cgroup がそれ以上を使わせない"],
+        why: "ノードは 8 コア。1 つのアプリが暴れても、ほかの展示が動く分を残す。",
+        code: `<span class="c"># namespace-defaults/quota.yaml と limits.yaml（抜粋）</span>
+    requests.cpu: "2"
+    limits.cpu: "4"
+    default:
+      cpu: 500m
+      memory: 256Mi`,
+        src: "oss-showcase-platform/namespace-defaults/" },
+      { group: "資源を食う", title: "fork bomb",
+        what: "プロセスを増やし続けて、ノードの PID を使い切る。",
+        layers: { ci: null, argo: null, api: null, run: "stop" },
+        how: ["kubelet の pod-max-pids で、Pod ごとのプロセス数を 1024 までにしている"],
+        why: "PID はノード全体で共有している。使い切られると、運営のコンポーネントも新しいプロセスを作れなくなる。",
+        code: `<span class="c"># bootstrap.sh</span>
+    <span class="c"># Pod ごとのプロセス数に上限を付ける。fork bomb でノード全体の PID を使い切られないため</span>
+    --kubelet-arg=pod-max-pids=1024`,
+        src: "oss-showcase-platform/bootstrap.sh" },
+      { group: "資源を食う", title: "ディスクを埋める",
+        what: "emptyDir やログに書き込み続ける。",
+        layers: { ci: null, argo: null, api: "stop", run: "stop" },
+        how: ["ephemeral-storage の上限で、emptyDir とログを 1 アプリ 5Gi までにする", "LimitRange が、書かれていないコンテナに 200Mi の上限を付ける"],
+        why: "emptyDir とログは、ノードのディスクを直接使う。上限がないと、ほかの展示も一緒に止まる。",
+        code: `<span class="c"># namespace-defaults/quota.yaml</span>
+    <span class="c"># emptyDir とログでノードのディスクを埋められないようにする</span>
+    limits.ephemeral-storage: 5Gi`,
+        src: "oss-showcase-platform/namespace-defaults/quota.yaml" },
+      { group: "資源を食う", title: "ConfigMap を大量に作る",
+        what: "Job から ConfigMap や Secret を作り続け、API サーバのデータストアを埋める。",
+        layers: { ci: null, argo: null, api: "stop", run: null },
+        how: ["ResourceQuota で、ConfigMap と Secret を 30 個、Job を 30 個、CronJob を 10 個までにする"],
+        why: "来場者は Role で、自分の ServiceAccount に作成を許せる。数を絞らないと、クラスタ全体が遅くなる。",
+        code: `<span class="c"># namespace-defaults/quota.yaml</span>
+    configmaps: "30"
+    secrets: "30"
+    count/jobs.batch: "30"
+    count/cronjobs.batch: "10"`,
+        src: "oss-showcase-platform/namespace-defaults/quota.yaml" },
+      { group: "資源を食う", title: "大量の接続で Gateway を埋める",
+        what: "1 つの IP から、Gateway に新しい接続を大量に張る。",
+        layers: { ci: null, argo: null, api: null, run: "stop" },
+        how: ["ノードの nftables で、送信元の IP ごとに新しい接続を 1 秒 300 本までにする"],
+        why: "Gateway API と Cilium の Gateway には、レート制限の仕組みがない。会場の Wi-Fi は NAT なので、上限は多めにしている。",
+        code: `<span class="c"># node/ratelimit.nft</span>
+    tcp dport { 80, 443 } ct state new
+      add @v4 { ip saddr limit rate over 300/second burst 600 packets }
+      counter drop`,
+        src: "oss-showcase-platform/node/ratelimit.nft" },
+    ];
+
+    const STATE_TEXT = { stop: "止める", log: "記録", pass: "—" };
+    const ORDER = ["ci", "argo", "api", "run"];
+    const picker = document.getElementById("picker");
+    const track = document.getElementById("track");
+    const token = document.getElementById("token");
+    const $ = (id) => document.getElementById(id);
+
+    const groups = [...new Set(ATTACKS.map((a) => a.group))];
+    for (const g of groups) {
+      const box = document.createElement("div");
+      box.className = "group";
+      box.innerHTML = `<h3>${g}</h3>`;
+      ATTACKS.forEach((a, i) => {
+        if (a.group !== g) return;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "attack-btn";
+        b.id = `attack-${i}`;
+        b.setAttribute("aria-pressed", "false");
+        b.innerHTML = `<span class="hex"></span><span>${a.title}</span>`;
+        b.addEventListener("click", () => show(i));
+        box.appendChild(b);
+      });
+      picker.appendChild(box);
+    }
+
+    function show(i) {
+      const a = ATTACKS[i];
+      document.querySelectorAll(".attack-btn").forEach((b) => b.setAttribute("aria-pressed", String(b.id === `attack-${i}`)));
+      $("a-title").textContent = a.title;
+      $("a-what").textContent = a.what;
+      $("a-how").innerHTML = a.how.map((h) => `<li>${h}</li>`).join("");
+      $("a-why").textContent = a.why;
+      $("a-code").innerHTML = a.code;
+      $("a-src").textContent = a.src;
+      const lanes = [...track.querySelectorAll(".lane")];
+      lanes.forEach((l) => {
+        const s = a.layers[l.dataset.k] || "pass";
+        l.dataset.s = s;
+        l.querySelector(".state").textContent = STATE_TEXT[s];
+      });
+      // 攻撃の駒は、最初に止める層まで進む。記録だけなら最後まで進む
+      const first = ORDER.findIndex((k) => a.layers[k] === "stop");
+      const target = lanes[first === -1 ? lanes.length - 1 : first];
+      token.style.left = "0px";
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        token.style.left = `${target.offsetLeft + target.offsetWidth / 2 - token.offsetWidth / 2}px`;
+      }));
+    }
+    show(0);
+    window.addEventListener("resize", () => {
+      const cur = document.querySelector('.attack-btn[aria-pressed="true"]');
+      if (cur) show(Number(cur.id.split("-")[1]));
+    });
+
+    // タブ。#名前 で開き、← → でも切り替えられる
+    const TAB_KEYS = [...document.querySelectorAll(".tab")].map((t) => t.dataset.k);
+    function openTab(k, focus) {
+      if (!TAB_KEYS.includes(k)) k = TAB_KEYS[0];
+      document.querySelectorAll(".tab").forEach((t) => {
+        const on = t.dataset.k === k;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        if (on && focus) t.focus();
+      });
+      document.querySelectorAll(".panel").forEach((p) => { p.hidden = p.id !== `p-${k}`; });
+      // ヒーローは最初のタブだけに出す。ほかのタブは、開いたらすぐ中身が見える
+      document.querySelector(".hero").hidden = k !== TAB_KEYS[0];
+      if (k === "attack") {
+        const cur = document.querySelector('.attack-btn[aria-pressed="true"]');
+        show(cur ? Number(cur.id.split("-")[1]) : 0);
+      }
+    }
+    function go(k) {
+      if (location.hash.slice(1) !== k) location.hash = k; else openTab(k);
+      window.scrollTo({ top: 0 });
+    }
+    document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => go(t.dataset.k)));
+    document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+    window.addEventListener("hashchange", () => openTab(location.hash.slice(1)));
+    document.addEventListener("keydown", (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || !["ArrowLeft", "ArrowRight"].includes(e.key)) return;
+      const i = TAB_KEYS.indexOf(document.querySelector('.tab[aria-selected="true"]').dataset.k);
+      const j = i + (e.key === "ArrowRight" ? 1 : -1);
+      if (j >= 0 && j < TAB_KEYS.length) { e.preventDefault(); go(TAB_KEYS[j]); }
+    });
+    openTab(location.hash.slice(1));
+    </script>
+
+    </body>
+    </html>
+kind: ConfigMap
+metadata:
+  name: showcase-platform
