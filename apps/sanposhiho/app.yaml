@@ -4,7 +4,8 @@ kind: Deployment
 metadata:
   name: sanposhiho
 spec:
-  replicas: 1
+  # キーノートの間、片方が落ちても資料を出し続ける
+  replicas: 2
   selector:
     matchLabels:
       app: sanposhiho
@@ -15,6 +16,8 @@ spec:
       annotations:
         slides/code-sha256: "3bc0b1702940739cfb0d03da843e8b3e5ee61fbc2f6e73285def9b95de5e7c60"
     spec:
+      # キーノートで使う。ノードが混んでも、来場者のアプリより先に動かす
+      priorityClassName: showcase-keynote
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
@@ -46,13 +49,15 @@ spec:
               path: /healthz
               port: 8080
             periodSeconds: 20
+          # requests と limits を揃えて、ノードが混んでも削られないようにする
+          # 更新のときに Pod が一時的に 3 つになっても、namespace の requests の上限（CPU 4 コア）に収まる値にする
           resources:
             requests:
-              cpu: 20m
-              memory: 48Mi
+              cpu: "1"
+              memory: 1Gi
             limits:
-              cpu: 500m
-              memory: 128Mi
+              cpu: "1"
+              memory: 1Gi
           volumeMounts:
             - name: app
               mountPath: /app
